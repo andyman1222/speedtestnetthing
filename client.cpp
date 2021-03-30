@@ -50,8 +50,11 @@ void TCPrecv() {
                 recvTCP = false;
             }
 
-            else if (iResult == 0)
+            else if (iResult == 0) {
                 printf("Connection closed TCP\n");
+                cleanup();
+            }
+                
             else
                 printf("TCP recv failed with error: %d\n", WSAGetLastError());
         }
@@ -60,7 +63,7 @@ void TCPrecv() {
         //}
         
 
-    } while (!recvTCP || iResult > 0);
+    } while (1);
     cleanup();
     
 }
@@ -84,8 +87,11 @@ void UDPrecv() {
                 recvUDP = false;
             }
 
-            else if (iResult == 0)
+            else if (iResult == 0) {
                 printf("Connection closed UDP\n");
+                cleanup();
+            }
+                
             else
                 printf("UDP recv failed with error: %d\n", WSAGetLastError());
         }
@@ -94,7 +100,7 @@ void UDPrecv() {
         //}
         
 
-    } while (!recvUDP || iResult > 0);
+    } while (1);
     cleanup();
     
 }

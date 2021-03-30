@@ -52,14 +52,17 @@ void TCPrecv() {
                 printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
                 listenTCP = false;
             }
-            else if (iResult == 0)
+            else if (iResult == 0) {
                 printf("Connection TCP closing...\n");
+                cleanup();
+            }
+                
             else {
                 printf("recv TCP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
         }
-    } while (!listenTCP || iResult > 0);
+    } while (1);
     cleanup();
 }
 
@@ -86,14 +89,17 @@ void UDPrecv() {
                 printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
                 listenUDP = false;
             }
-            else if (iResult == 0)
+            else if (iResult == 0) {
                 printf("Connection UDP closing...\n");
+                cleanup();
+            }
+                
             else {
                 printf("recv UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
         }
-    } while (!listenUDP || iResult > 0);
+    } while (1);
     cleanup();
 }
 

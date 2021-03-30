@@ -1,11 +1,11 @@
 ﻿  client.cpp
 B:\Documents\GitHub\speedtestnetthing\client.cpp(49,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(83,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(111,10): warning C4101: 'recvbuf': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(115,19): warning C4101: 'end': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(115,12): warning C4101: 'start': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(86,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(117,10): warning C4101: 'recvbuf': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(121,19): warning C4101: 'end': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(121,12): warning C4101: 'start': unreferenced local variable
   Generating code
-  3 of 143 functions ( 2.1%) were compiled, the rest were copied from previous compilation.
+  8 of 143 functions ( 5.6%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
