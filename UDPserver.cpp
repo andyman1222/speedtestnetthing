@@ -80,7 +80,6 @@ int __cdecl main(void)
     // Receive until the peer shuts down the connection
 
     do {
-        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
         iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (struct sockaddr*)&si_other, &slen);
         if (iResult > 0) {
             printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
