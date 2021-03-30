@@ -34,7 +34,7 @@ void TCPrecv() {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
-
+    printf("TCP listen start");
     
     do {
         if(listenTCP){
@@ -68,7 +68,8 @@ void UDPrecv() {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
-    
+    printf("UDP listen start");
+
     do {
         if(listenUDP){
             printf("Listening UDP...\n");
@@ -210,8 +211,10 @@ int __cdecl main(void)
     std::thread TCPt(TCPrecv);
     std::thread UDPt(UDPrecv);
     while (1) {
+        printf("Set listenTCP true");
         listenTCP = true;
         while (listenTCP) {};
+        printf("Set listenUDP true");
         listenUDP = true;
         while (listenUDP) {};
     }
