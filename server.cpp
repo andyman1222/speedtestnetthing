@@ -32,7 +32,10 @@ void TCPrecv() {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
+
+    
     do {
+        printf("Listening TCP...\n");
         iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
             printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
@@ -62,6 +65,7 @@ void UDPrecv() {
     int recvbuflen = DEFAULT_BUFLEN;
     
     do {
+        printf("Listening UDP...\n");
         iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
             printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
@@ -164,7 +168,7 @@ int __cdecl main(void)
         cleanup(1);
     }
 
-    printf("Listening for connections...");
+    printf("Listening for connections...\n");
     /*listening and accepting apparently is only for TCP
     iResult = listen(ListenSocketUDP, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
@@ -194,7 +198,7 @@ int __cdecl main(void)
     closesocket(ListenSocketUDP);*/
 
     // Receive until the peer shuts down the connection
-    printf("Client connected. Beginning threads...");
+    printf("Client connected. Beginning threads...\n");
     std::thread TCPt(TCPrecv);
     std::thread UDPt(UDPrecv);
     while (1) { Sleep(1); }

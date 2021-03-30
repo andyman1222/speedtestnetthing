@@ -41,6 +41,7 @@ void TCPrecv() {
     
     do {
         //if (recvTCP) {
+        printf("Listening TCP...\n");
             iResult = recv(TCP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
                 end = chrono::high_resolution_clock::now();
@@ -74,6 +75,7 @@ void UDPrecv() {
     
     do {
         //if (recvTCP) {
+        printf("Listening UDP...\n");
             iResult = recv(UDP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
                 end = chrono::high_resolution_clock::now();
