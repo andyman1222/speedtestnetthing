@@ -34,7 +34,7 @@ void TCPrecv() {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
-    printf("TCP listen start");
+    printf("TCP listen start\n");
     
     do {
         if(listenTCP){
@@ -68,7 +68,7 @@ void UDPrecv() {
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
     int recvbuflen = DEFAULT_BUFLEN;
-    printf("UDP listen start");
+    printf("UDP listen start\n");
 
     do {
         if(listenUDP){
@@ -208,13 +208,14 @@ int __cdecl main(void)
 
     // Receive until the peer shuts down the connection
     printf("Client connected. Beginning threads...\n");
+    listenTCP = true;
     std::thread TCPt(TCPrecv);
     std::thread UDPt(UDPrecv);
     while (1) {
-        printf("Set listenTCP true");
+        printf("Set listenTCP true\n");
         listenTCP = true;
         while (listenTCP) {};
-        printf("Set listenUDP true");
+        printf("Set listenUDP true\n");
         listenUDP = true;
         while (listenUDP) {};
     }
