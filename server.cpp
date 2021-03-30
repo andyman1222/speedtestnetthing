@@ -62,42 +62,42 @@ int __cdecl main(void)
     // Resolve the server address and port
     iResult = getaddrinfo(NULL, TCPORT, &hintsTCP, &resultTCP);
     if (iResult != 0) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+        printf("getaddrinfo TCP failed with error: %d\n", iResult);
         cleanup(1);
     }
 
     // Resolve the server address and port
     iResult = getaddrinfo(NULL, UDPORT, &hintsUDP, &resultUDP);
     if (iResult != 0) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
+        printf("getaddrinfo UDP failed with error: %d\n", iResult);
         cleanup(1);
     }
 
     // Create a SOCKET for connecting to server
     ListenSocketTCP = socket(resultTCP->ai_family, resultTCP->ai_socktype, resultTCP->ai_protocol);
     if (ListenSocketTCP == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        printf("socket TCP failed with error: %ld\n", WSAGetLastError());
         cleanup(1);
     }
 
     // Create a SOCKET for connecting to server
     ListenSocketUDP = socket(resultUDP->ai_family, resultUDP->ai_socktype, resultUDP->ai_protocol);
     if (ListenSocketUDP == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
+        printf("socket UDP failed with error: %ld\n", WSAGetLastError());
         cleanup(1);
     }
 
     // Setup the TCP listening socket
     iResult = bind(ListenSocketTCP, resultUDP->ai_addr, (int)resultTCP->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        printf("bind TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
     // Setup the UDP listening socket
     iResult = bind(ListenSocketUDP, resultUDP->ai_addr, (int)resultUDP->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
+        printf("bind UDP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
@@ -106,20 +106,20 @@ int __cdecl main(void)
 
     iResult = listen(ListenSocketTCP, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
+        printf("listen TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
     iResult = listen(ListenSocketUDP, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
+        printf("listen UDP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
     // Accept a client socket
     ClientSocketTCP = accept(ListenSocketTCP, NULL, NULL);
     if (ClientSocketTCP == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
+        printf("accept TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
@@ -129,7 +129,7 @@ int __cdecl main(void)
     // Accept a client socket
     ClientSocketUDP = accept(ClientSocketUDP, NULL, NULL);
     if (ClientSocketUDP == INVALID_SOCKET) {
-        printf("accept failed with error: %d\n", WSAGetLastError());
+        printf("accept UDP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
 
@@ -142,39 +142,39 @@ int __cdecl main(void)
 
         iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
-            printf("Bytes received: %d\n", iResult);
+            printf("Bytes TCP received: %d\n", iResult);
 
             // Echo the buffer back to the sender
             iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
             if (iSendResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
+                printf("send TCP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
-            printf("Bytes sent: %d\n", iSendResult);
+            printf("Bytes TCP sent: %d\n", iSendResult);
         }
         else if (iResult == 0)
-            printf("Connection closing...\n");
+            printf("Connection TCP closing...\n");
         else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
+            printf("recv TCP failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
 
         iResult = recv(ClientSocketUDP, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
-            printf("Bytes received: %d\n", iResult);
+            printf("Bytes UDP received: %d\n", iResult);
 
             // Echo the buffer back to the sender
             iSendResult = send(ClientSocketUDP, recvbuf, iResult, 0);
             if (iSendResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
+                printf("send UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
-            printf("Bytes sent: %d\n", iSendResult);
+            printf("Bytes UDP sent: %d\n", iSendResult);
         }
         else if (iResult == 0)
-            printf("Connection closing...\n");
+            printf("Connection UDP closing...\n");
         else {
-            printf("recv failed with error: %d\n", WSAGetLastError());
+            printf("recv UDP failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
 
@@ -210,7 +210,7 @@ int cleanup(int code) {
     if (ClientSocketUDP != INVALID_SOCKET) {
         iResult = shutdown(ClientSocketUDP, SD_SEND);
         if (iResult == SOCKET_ERROR) {
-            printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+            printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
             code = 1;
         }
         closesocket(ClientSocketUDP);
