@@ -29,82 +29,6 @@ void cleanup();
 
 bool listenTCP = false, listenUDP = false;
 
-void TCPrecv() {
-    int iResult;
-    int iSendResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
-    printf("TCP listen start\n");
-    
-    do {
-        if(listenTCP){
-            printf("Listening TCP...\n");
-            iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
-
-                // Echo the buffer back to the sender
-                iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
-                if (iSendResult == SOCKET_ERROR) {
-                    printf("send TCP failed with error: %d\n", WSAGetLastError());
-                    cleanup(1);
-                }
-                printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
-                listenTCP = false;
-                listenUDP = true;
-            }
-            else if (iResult == 0) {
-                printf("Connection TCP closing...\n");
-                cleanup();
-            }
-                
-            else {
-                printf("recv TCP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-        }
-    } while (1);
-    cleanup();
-}
-
-void UDPrecv() {
-    int iResult;
-    int iSendResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
-    printf("UDP listen start\n");
-
-    do {
-        if(listenUDP){
-            printf("Listening UDP...\n");
-            iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
-
-                // Echo the buffer back to the sender
-                iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
-                if (iSendResult == SOCKET_ERROR) {
-                    printf("send UDP failed with error: %d\n", WSAGetLastError());
-                    cleanup(1);
-                }
-                printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
-                listenUDP = false;
-                listenTCP = true;
-            }
-            else if (iResult == 0) {
-                printf("Connection UDP closing...\n");
-                cleanup();
-            }
-                
-            else {
-                printf("recv UDP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-        }
-    } while (1);
-    cleanup();
-}
-
 int __cdecl main(void)
 {
     atexit(cleanup);
@@ -217,20 +141,71 @@ int __cdecl main(void)
     // Receive until the peer shuts down the connection
     printf("Client connected. Beginning threads...\n");
     listenTCP = true;
-    std::thread TCPt(TCPrecv);
-    std::thread UDPt(UDPrecv);
+    //std::thread TCPt(TCPrecv);
+    //std::thread UDPt(UDPrecv);
     while (1) {
-        printf("Set listenTCP true\n");
-        //listenTCP = true;
-        while (listenTCP) {};
-        printf("Set listenUDP true\n");
-        //listenUDP = true;
-        while (listenUDP) {};
+        printf("TCP listen start\n");
+
+        do {
+            if (listenTCP) {
+                printf("Listening TCP...\n");
+                iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
+                if (iResult > 0) {
+                    printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
+
+                    // Echo the buffer back to the sender
+                    iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
+                    if (iSendResult == SOCKET_ERROR) {
+                        printf("send TCP failed with error: %d\n", WSAGetLastError());
+                        cleanup(1);
+                    }
+                    printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+                    //do {
+                        //if (listenUDP) {
+                            printf("Listening UDP...\n");
+                            iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
+                            if (iResult > 0) {
+                                printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
+
+                                // Echo the buffer back to the sender
+                                iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
+                                if (iSendResult == SOCKET_ERROR) {
+                                    printf("send UDP failed with error: %d\n", WSAGetLastError());
+                                    cleanup(1);
+                                }
+                                printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+                                listenUDP = false;
+                                listenTCP = true;
+                            }
+                            else if (iResult == 0) {
+                                printf("Connection UDP closing...\n");
+                                cleanup();
+                            }
+
+                            else {
+                                printf("recv UDP failed with error: %d\n", WSAGetLastError());
+                                cleanup(1);
+                            }
+                        //}
+                    //} while (1);
+                }
+                else if (iResult == 0) {
+                    printf("Connection TCP closing...\n");
+                    cleanup();
+                }
+
+                else {
+                    printf("recv TCP failed with error: %d\n", WSAGetLastError());
+                    cleanup(1);
+                }
+            }
+        } while (1);
+        cleanup();
     }
     listenTCP = true;
     listenUDP = true;
-    TCPt.join();
-    UDPt.join();
+    //TCPt.join();
+    //UDPt.join();
     // cleanup
     cleanup(0);
 }
