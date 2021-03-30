@@ -88,7 +88,7 @@ int __cdecl main(void)
     }
 
     // Setup the TCP listening socket
-    iResult = bind(ListenSocketTCP, resultUDP->ai_addr, (int)resultTCP->ai_addrlen);
+    iResult = bind(ListenSocketTCP, resultTCP->ai_addr, (int)resultTCP->ai_addrlen);
     if (iResult == SOCKET_ERROR) {
         printf("bind TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
