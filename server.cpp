@@ -221,10 +221,10 @@ int __cdecl main(void)
     std::thread UDPt(UDPrecv);
     while (1) {
         printf("Set listenTCP true\n");
-        listenTCP = true;
+        //listenTCP = true;
         while (listenTCP) {};
         printf("Set listenUDP true\n");
-        listenUDP = true;
+        //listenUDP = true;
         while (listenUDP) {};
     }
     listenTCP = true;
