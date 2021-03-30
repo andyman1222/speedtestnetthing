@@ -46,7 +46,7 @@ void TCPrecv() {
             if (iResult > 0) {
                 end = chrono::high_resolution_clock::now();
                 printf("Bytes received TCP: %d\n", iResult);
-                printf("Received \"%s\". Time: %d", recvbuf, (end - startTCP));
+                printf("Received \"%s\". Time: %d\n", recvbuf, (end - startTCP));
                 recvTCP = false;
             }
 
@@ -83,7 +83,7 @@ void UDPrecv() {
             if (iResult > 0) {
                 end = chrono::high_resolution_clock::now();
                 printf("Bytes received UDP: %d\n", iResult);
-                printf("Received \"%s\". Time: %d", recvbuf, (end - startUDP));
+                printf("Received \"%s\". Time: %d\n", recvbuf, (end - startUDP));
                 recvUDP = false;
             }
 

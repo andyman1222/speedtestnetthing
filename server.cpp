@@ -51,6 +51,7 @@ void TCPrecv() {
                 }
                 printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
                 listenTCP = false;
+                listenUDP = true;
             }
             else if (iResult == 0) {
                 printf("Connection TCP closing...\n");
@@ -88,6 +89,7 @@ void UDPrecv() {
                 }
                 printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
                 listenUDP = false;
+                listenTCP = true;
             }
             else if (iResult == 0) {
                 printf("Connection UDP closing...\n");
