@@ -1,1 +1,1 @@
-B:\Documents\GitHub\speedtestnetthing\x64\Release\speedynettest.exe
+B:\Documents\GitHub\speedtestnetthing\x64\Release\UDPclient.exe

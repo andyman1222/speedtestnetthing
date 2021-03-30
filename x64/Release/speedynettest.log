@@ -1,12 +1,10 @@
-﻿  client.cpp
-B:\Documents\GitHub\speedtestnetthing\client.cpp(49,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(86,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(117,10): warning C4101: 'recvbuf': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(121,19): warning C4101: 'end': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(121,12): warning C4101: 'start': unreferenced local variable
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(491,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (speedynettest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  UDPclient.cpp
+B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(106,20): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(119,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
+B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(40,9): warning C4101: 'hintsTCP': unreferenced local variable
   Generating code
-  2 of 143 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
+  Previous IPDB not found, fall back to full compilation.
+  All 112 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
-  speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\speedynettest.exe
+  speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\UDPclient.exe
