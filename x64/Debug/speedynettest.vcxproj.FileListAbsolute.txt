@@ -1,0 +1,2 @@
+B:\Documents\GitHub\speedtestnetthing\x64\Debug\speedynettest.exe
+B:\Documents\GitHub\speedtestnetthing\x64\Debug\speedynettest.pdb

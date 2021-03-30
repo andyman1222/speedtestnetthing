@@ -5,6 +5,8 @@ VisualStudioVersion = 16.0.31019.35
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "speedynettest", "speedynettest.vcxproj", "{3EE10E4D-A3A4-4F83-96F4-AF2AB35A9CD5}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "server\server\server.vcxproj", "{9C575DA5-C123-411F-A91F-8DC07422CA94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{3EE10E4D-A3A4-4F83-96F4-AF2AB35A9CD5}.Release|x64.Build.0 = Release|x64
 		{3EE10E4D-A3A4-4F83-96F4-AF2AB35A9CD5}.Release|x86.ActiveCfg = Release|Win32
 		{3EE10E4D-A3A4-4F83-96F4-AF2AB35A9CD5}.Release|x86.Build.0 = Release|Win32
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Debug|x64.ActiveCfg = Debug|x64
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Debug|x64.Build.0 = Debug|x64
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Debug|x86.ActiveCfg = Debug|Win32
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Debug|x86.Build.0 = Debug|Win32
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Release|x64.ActiveCfg = Release|x64
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Release|x64.Build.0 = Release|x64
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Release|x86.ActiveCfg = Release|Win32
+		{9C575DA5-C123-411F-A91F-8DC07422CA94}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
