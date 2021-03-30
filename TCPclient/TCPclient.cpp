@@ -6,8 +6,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <chrono>
+#include <string>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -29,12 +31,18 @@ SOCKET TCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
 chrono::high_resolution_clock::time_point startTCP;
 string sendbuf;
+ofstream myfile("TCP.csv", ios::out | ios::app);
 
+using namespace std;
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
     WSADATA wsaData;
 
+    if (!myfile.is_open()) {
+        printf("Unable to open file");
+        return 1;
+    }
 
     struct addrinfo* ptr = NULL,
         hintsTCP, hintsUDP;
@@ -103,7 +111,7 @@ int __cdecl main(int argc, char** argv)
             cin >> sendbuf;
             printf("Sending via TCP \"%s\"...\n", sendbuf);
             startTCP = chrono::high_resolution_clock::now();
-            iResult = send(TCP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
+            iResult = send(TCP, sendbuf.c_str(), (int)sendbuf.length()+1, 0);
             if (iResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
@@ -115,6 +123,8 @@ int __cdecl main(int argc, char** argv)
                 end = chrono::high_resolution_clock::now();
                 printf("Bytes received TCP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d\n", recvbuf, (end - startTCP));
+                long r = (end - startTCP).count();
+                myfile << "" << iResult << "," << r << "\n";
             }
             else if (iResult == 0) {
                 printf("Connection UDP closing...\n");
@@ -155,6 +165,8 @@ int cleanup(int code) {
         freeaddrinfo(resultTCP);
 
     WSACleanup();
+
+    myfile.close();
 
     exit(code);
 }

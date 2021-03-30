@@ -8,7 +8,7 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
-
+#include <fstream>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -29,12 +29,17 @@ SOCKET UDP = INVALID_SOCKET;
 struct addrinfo *resultUDP = NULL;
 chrono::high_resolution_clock::time_point startUDP;
 string sendbuf;
+ofstream myfile("UDP.csv", ios::out | ios::app);
 
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
     WSADATA wsaData;
     
+    if (!myfile.is_open()) {
+        printf("Unable to open file");
+        return 1;
+    }
     
     struct addrinfo* ptr = NULL,
         hintsTCP, hintsUDP;
@@ -105,7 +110,7 @@ int __cdecl main(int argc, char** argv)
             
             printf("Sending via UDP \"%s\"...\n", sendbuf);
             startUDP = chrono::high_resolution_clock::now();
-            iResult = send(UDP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
+            iResult = send(UDP, sendbuf.c_str(), (int)sendbuf.length()+1, 0);
             if (iResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
@@ -117,6 +122,8 @@ int __cdecl main(int argc, char** argv)
                 end = chrono::high_resolution_clock::now();
                 printf("Bytes received UDP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d\n", recvbuf, (end - startUDP));
+                long r = (end - startUDP).count();
+                myfile << "" << iResult << "," << r << "\n";
             }
 
             else if (iResult == 0) {
@@ -155,6 +162,6 @@ int cleanup(int code) {
     if (resultUDP != NULL)
         freeaddrinfo(resultUDP);
     WSACleanup();
-
+    myfile.close();
     exit(code);
 }
