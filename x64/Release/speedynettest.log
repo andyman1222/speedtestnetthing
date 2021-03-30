@@ -1,6 +1,14 @@
 ﻿  client.cpp
+B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%lld' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%Id' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%I64d' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%lld' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%Id' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%I64d' in the format string
   Generating code
-  Previous IPDB not found, fall back to full compilation.
-  All 4 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Compiler switch has changed, fall back to full compilation.
+  All 101 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
   Finished generating code
   speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\speedynettest.exe

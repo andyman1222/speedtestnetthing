@@ -5,6 +5,7 @@
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -14,20 +15,32 @@
 
 
 #define DEFAULT_BUFLEN 512
-#define DEFAULT_PORT "27015"
+#define UDPORT "27016"
+#define TCPORT "27015"
 #define ADDR "a.quantonium.net"
+
+using namespace std;
+
+int cleanup(int r);
+void cleanup();
+
+SOCKET TCP = INVALID_SOCKET, UDP = INVALID_SOCKET;
+struct addrinfo *resultTCP = NULL, *resultUDP = NULL;
 
 int __cdecl main(int argc, char** argv)
 {
+    atexit(cleanup);
     WSADATA wsaData;
-    SOCKET ConnectSocket = INVALID_SOCKET;
-    struct addrinfo* result = NULL,
-        * ptr = NULL,
-        hints;
-    const char* sendbuf = "this is a test";
+    
+    
+    struct addrinfo* ptr = NULL,
+        hintsTCP, hintsUDP;
+    string sendbuf;
     char recvbuf[DEFAULT_BUFLEN];
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
+
+    time_t start, end;
 
     /*// Validate the parameters
     if (argc != 2) {
@@ -42,85 +55,169 @@ int __cdecl main(int argc, char** argv)
         return 1;
     }
 
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
+    ZeroMemory(&hintsTCP, sizeof(hintsTCP));
+    hintsTCP.ai_family = AF_UNSPEC;
+    hintsTCP.ai_socktype = SOCK_STREAM;
+    hintsTCP.ai_protocol = IPPROTO_TCP;
+
+    ZeroMemory(&hintsUDP, sizeof(hintsUDP));
+    hintsUDP.ai_family = AF_UNSPEC;
+    hintsUDP.ai_socktype = SOCK_STREAM;
+    hintsUDP.ai_protocol = IPPROTO_UDP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(ADDR, DEFAULT_PORT, &hints, &result);
+    iResult = getaddrinfo(ADDR, TCPORT, &hintsTCP, &resultTCP);
     if (iResult != 0) {
-        printf("getaddrinfo failed with error: %d\n", iResult);
-        WSACleanup();
-        return 1;
+        printf("getaddrinfo TCP failed with error: %d\n", iResult);
+        cleanup(1);
+    }
+
+    // Resolve the server address and port
+    iResult = getaddrinfo(ADDR, UDPORT, &hintsUDP, &resultUDP);
+    if (iResult != 0) {
+        printf("getaddrinfo UDP failed with error: %d\n", iResult);
+        cleanup(1);
     }
 
     // Attempt to connect to an address until one succeeds
-    for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+    for (ptr = resultTCP; ptr != NULL; ptr = ptr->ai_next) {
 
         // Create a SOCKET for connecting to server
-        ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,
+        TCP = socket(ptr->ai_family, ptr->ai_socktype,
             ptr->ai_protocol);
-        if (ConnectSocket == INVALID_SOCKET) {
-            printf("socket failed with error: %ld\n", WSAGetLastError());
-            WSACleanup();
-            return 1;
+        if (TCP == INVALID_SOCKET) {
+            printf("socket TCP failed with error: %ld\n", WSAGetLastError());
+            cleanup(1);
         }
 
         // Connect to server.
-        iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+        iResult = connect(TCP, ptr->ai_addr, (int)ptr->ai_addrlen);
         if (iResult == SOCKET_ERROR) {
-            closesocket(ConnectSocket);
-            ConnectSocket = INVALID_SOCKET;
+            closesocket(TCP);
+            TCP = INVALID_SOCKET;
             continue;
         }
         break;
     }
 
-    freeaddrinfo(result);
+    // Attempt to connect to an address until one succeeds
+    for (ptr = resultUDP; ptr != NULL; ptr = ptr->ai_next) {
 
-    if (ConnectSocket == INVALID_SOCKET) {
-        printf("Unable to connect to server!\n");
-        WSACleanup();
-        return 1;
+        // Create a SOCKET for connecting to server
+        UDP = socket(ptr->ai_family, ptr->ai_socktype,
+            ptr->ai_protocol);
+        if (UDP == INVALID_SOCKET) {
+            printf("socket UDP failed with error: %ld\n", WSAGetLastError());
+            cleanup(1);
+        }
+
+        // Connect to server.
+        iResult = connect(UDP, ptr->ai_addr, (int)ptr->ai_addrlen);
+        if (iResult == SOCKET_ERROR) {
+            closesocket(UDP);
+            UDP = INVALID_SOCKET;
+            continue;
+        }
+        break;
     }
 
-    // Send an initial buffer
-    iResult = send(ConnectSocket, sendbuf, (int)strlen(sendbuf), 0);
-    if (iResult == SOCKET_ERROR) {
-        printf("send failed with error: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 1;
+    if (TCP == INVALID_SOCKET) {
+        printf("Unable to connect to server! TCP\n");
+        cleanup(1);
     }
 
-    printf("Bytes Sent: %ld\n", iResult);
-
-    // shutdown the connection since no more data will be sent
-    iResult = shutdown(ConnectSocket, SD_SEND);
-    if (iResult == SOCKET_ERROR) {
-        printf("shutdown failed with error: %d\n", WSAGetLastError());
-        closesocket(ConnectSocket);
-        WSACleanup();
-        return 1;
+    if (UDP == INVALID_SOCKET) {
+        printf("Unable to connect to server! UDP\n");
+        cleanup(1);
     }
 
-    // Receive until the peer closes the connection
-    do {
+    printf("Server connection established TCP and UDP");
 
-        iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-        if (iResult > 0)
-            printf("Bytes received: %d\n", iResult);
-        else if (iResult == 0)
-            printf("Connection closed\n");
-        else
-            printf("recv failed with error: %d\n", WSAGetLastError());
+    while (1) {
+        printf("Send a message: ");
+        cin >> sendbuf;
+        printf("Sending via TCP...");
+        time(&start);
+        iResult = send(TCP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
+        if (iResult == SOCKET_ERROR) {
+            printf("send failed with error: %d\n", WSAGetLastError());
+            cleanup(1);
+        }
+        printf("Bytes Sent: %ld\n", iResult);
+        // Receive until the peer closes the connection
+        do {
 
-    } while (iResult > 0);
+            iResult = recv(TCP, recvbuf, recvbuflen, 0);
+            if (iResult > 0)
+                printf("Bytes received TCP: %d\n", iResult);
+            else if (iResult == 0)
+                printf("Connection closed TCP\n");
+            else
+                printf("TCP recv failed with error: %d\n", WSAGetLastError());
 
+        } while (iResult > 0);
+        time(&end);
+        printf("Received \"%s\". Time: %d", recvbuf, (end - start));
+
+        printf("Sending via UDP...");
+        time(&start);
+        iResult = send(UDP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
+        if (iResult == SOCKET_ERROR) {
+            printf("send failed with error: %d\n", WSAGetLastError());
+            cleanup(1);
+        }
+        printf("Bytes Sent: %ld\n", iResult);
+        // Receive until the peer closes the connection
+        do {
+
+            iResult = recv(UDP, recvbuf, recvbuflen, 0);
+            if (iResult > 0)
+                printf("Bytes received UDP: %d\n", iResult);
+            else if (iResult == 0)
+                printf("Connection closed UDP\n");
+            else
+                printf("UDP recv failed with error: %d\n", WSAGetLastError());
+
+        } while (iResult > 0);
+        time(&end);
+        printf("Received \"%s\". Time: %d", recvbuf, (end - start));
+    }
     // cleanup
-    closesocket(ConnectSocket);
+    cleanup(0);
+}
+
+void cleanup() {
+    cleanup(0);
+}
+
+int cleanup(int code) {
+    // shutdown the connection since no more data will be sent
+    int iResult;
+    printf("Cleaning up...");
+    if (TCP != INVALID_SOCKET) {
+        iResult = shutdown(TCP, SD_SEND);
+        if (iResult == SOCKET_ERROR) {
+            printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+            code = 1;
+        }
+        closesocket(TCP);
+    }
+
+    if (UDP != INVALID_SOCKET) {
+        iResult = shutdown(UDP, SD_SEND);
+        if (iResult == SOCKET_ERROR) {
+            printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
+            code = 1;
+        }
+        closesocket(UDP);
+    }
+
+    if(resultTCP != NULL)
+        freeaddrinfo(resultTCP);
+
+    if (resultUDP != NULL)
+        freeaddrinfo(resultUDP);
     WSACleanup();
 
-    return 0;
+    return 1;
 }
