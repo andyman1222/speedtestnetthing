@@ -223,5 +223,5 @@ int cleanup(int code) {
         freeaddrinfo(resultUDP);
     WSACleanup();
 
-    return 1;
+    exit(code);
 }
