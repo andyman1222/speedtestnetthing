@@ -57,7 +57,7 @@ int __cdecl main(int argc, char** argv)
 
     ZeroMemory(&hintsTCP, sizeof(hintsTCP));
     hintsTCP.ai_family = AF_UNSPEC;
-    hintsTCP.ai_socktype = SOCK_DGRAM;
+    hintsTCP.ai_socktype = SOCK_STREAM;
     hintsTCP.ai_protocol = IPPROTO_TCP;
 
     ZeroMemory(&hintsUDP, sizeof(hintsUDP));
