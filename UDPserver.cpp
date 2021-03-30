@@ -80,12 +80,12 @@ int __cdecl main(void)
     // Receive until the peer shuts down the connection
 
     do {
-        iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (struct sockaddr*)&si_other, &slen);
+        iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (SOCKADDR *)&si_other, &slen);
         if (iResult > 0) {
             printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
 
             // Echo the buffer back to the sender
-            iSendResult = sendto(ListenSocketUDP, recvbuf, iResult, 0, (struct sockaddr*)&si_other, slen);
+            iSendResult = sendto(ListenSocketUDP, recvbuf, iResult, 0, (SOCKADDR *)&si_other, slen);
             if (iSendResult == SOCKET_ERROR) {
                 printf("send UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
