@@ -40,7 +40,7 @@ void TCPrecv() {
     chrono::high_resolution_clock::time_point end;
     
     do {
-        //if (recvTCP) {
+        if (recvTCP) {
         printf("Listening TCP...\n");
             iResult = recv(TCP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
@@ -54,13 +54,13 @@ void TCPrecv() {
                 printf("Connection closed TCP\n");
             else
                 printf("TCP recv failed with error: %d\n", WSAGetLastError());
-        //}
+        }
         //else {
          //   Sleep(1);
         //}
         
 
-    } while (iResult > 0);
+    } while (!recvTCP || iResult > 0);
     cleanup();
     
 }
@@ -74,27 +74,27 @@ void UDPrecv() {
     chrono::high_resolution_clock::time_point end;
     
     do {
-        //if (recvTCP) {
+        if (recvUDP) {
         printf("Listening UDP...\n");
             iResult = recv(UDP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
                 end = chrono::high_resolution_clock::now();
                 printf("Bytes received UDP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d", recvbuf, (end - startUDP));
-                recvTCP = false;
+                recvUDP = false;
             }
 
             else if (iResult == 0)
                 printf("Connection closed UDP\n");
             else
                 printf("UDP recv failed with error: %d\n", WSAGetLastError());
-        //}
+        }
         //else {
         //    Sleep(1);
         //}
         
 
-    } while (iResult > 0);
+    } while (!recvUDP || iResult > 0);
     cleanup();
     
 }

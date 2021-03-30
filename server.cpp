@@ -27,6 +27,8 @@ struct addrinfo hintsTCP, hintsUDP;
 int cleanup(int r);
 void cleanup();
 
+bool listenTCP = false, listenUDP = false;
+
 void TCPrecv() {
     int iResult;
     int iSendResult;
@@ -35,26 +37,29 @@ void TCPrecv() {
 
     
     do {
-        printf("Listening TCP...\n");
-        iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
-        if (iResult > 0) {
-            printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
+        if(listenTCP){
+            printf("Listening TCP...\n");
+            iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
+            if (iResult > 0) {
+                printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
 
-            // Echo the buffer back to the sender
-            iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
-            if (iSendResult == SOCKET_ERROR) {
-                printf("send TCP failed with error: %d\n", WSAGetLastError());
+                // Echo the buffer back to the sender
+                iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
+                if (iSendResult == SOCKET_ERROR) {
+                    printf("send TCP failed with error: %d\n", WSAGetLastError());
+                    cleanup(1);
+                }
+                printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+                listenTCP = false;
+            }
+            else if (iResult == 0)
+                printf("Connection TCP closing...\n");
+            else {
+                printf("recv TCP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
-            printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
         }
-        else if (iResult == 0)
-            printf("Connection TCP closing...\n");
-        else {
-            printf("recv TCP failed with error: %d\n", WSAGetLastError());
-            cleanup(1);
-        }
-    } while (iResult > 0);
+    } while (!listenTCP || iResult > 0);
     cleanup();
 }
 
@@ -65,26 +70,29 @@ void UDPrecv() {
     int recvbuflen = DEFAULT_BUFLEN;
     
     do {
-        printf("Listening UDP...\n");
-        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
-        if (iResult > 0) {
-            printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
+        if(listenUDP){
+            printf("Listening UDP...\n");
+            iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
+            if (iResult > 0) {
+                printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
 
-            // Echo the buffer back to the sender
-            iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
-            if (iSendResult == SOCKET_ERROR) {
-                printf("send UDP failed with error: %d\n", WSAGetLastError());
+                // Echo the buffer back to the sender
+                iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
+                if (iSendResult == SOCKET_ERROR) {
+                    printf("send UDP failed with error: %d\n", WSAGetLastError());
+                    cleanup(1);
+                }
+                printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+                listenUDP = false;
+            }
+            else if (iResult == 0)
+                printf("Connection UDP closing...\n");
+            else {
+                printf("recv UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
-            printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
         }
-        else if (iResult == 0)
-            printf("Connection UDP closing...\n");
-        else {
-            printf("recv UDP failed with error: %d\n", WSAGetLastError());
-            cleanup(1);
-        }
-    } while (iResult > 0);
+    } while (!listenUDP || iResult > 0);
     cleanup();
 }
 
@@ -201,7 +209,14 @@ int __cdecl main(void)
     printf("Client connected. Beginning threads...\n");
     std::thread TCPt(TCPrecv);
     std::thread UDPt(UDPrecv);
-    while (1) { Sleep(1); }
+    while (1) {
+        listenTCP = true;
+        while (listenTCP) {};
+        listenUDP = true;
+        while (listenUDP) {};
+    }
+    listenTCP = true;
+    listenUDP = true;
     TCPt.join();
     UDPt.join();
     // cleanup
