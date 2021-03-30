@@ -19,7 +19,6 @@
 SOCKET ListenSocketTCP = INVALID_SOCKET;
 SOCKET ClientSocketTCP = INVALID_SOCKET;
 SOCKET ListenSocketUDP = INVALID_SOCKET;
-SOCKET ClientSocketUDP = INVALID_SOCKET;
 
 struct addrinfo *resultTCP = NULL, *resultUDP = NULL;
 struct addrinfo hintsTCP, hintsUDP;
@@ -109,12 +108,12 @@ int __cdecl main(void)
         printf("listen TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
-
+    /*listening and accepting apparently is only for TCP
     iResult = listen(ListenSocketUDP, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
         printf("listen UDP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
-    }
+    }*/
 
     // Accept a client socket
     ClientSocketTCP = accept(ListenSocketTCP, NULL, NULL);
@@ -125,7 +124,7 @@ int __cdecl main(void)
 
     // No longer need server socket
     closesocket(ListenSocketTCP);
-
+    /*
     // Accept a client socket
     ClientSocketUDP = accept(ClientSocketUDP, NULL, NULL);
     if (ClientSocketUDP == INVALID_SOCKET) {
@@ -135,7 +134,7 @@ int __cdecl main(void)
 
     // No longer need server socket
     
-    closesocket(ListenSocketUDP);
+    closesocket(ListenSocketUDP);*/
 
     // Receive until the peer shuts down the connection
     do {
@@ -159,12 +158,12 @@ int __cdecl main(void)
             cleanup(1);
         }
 
-        iResult = recv(ClientSocketUDP, recvbuf, recvbuflen, 0);
+        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
         if (iResult > 0) {
             printf("Bytes UDP received: %d\n", iResult);
 
             // Echo the buffer back to the sender
-            iSendResult = send(ClientSocketUDP, recvbuf, iResult, 0);
+            iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
             if (iSendResult == SOCKET_ERROR) {
                 printf("send UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
@@ -204,16 +203,14 @@ int cleanup(int code) {
         closesocket(ClientSocketTCP);
     }
 
+
     if (ListenSocketUDP != INVALID_SOCKET) {
-        closesocket(ListenSocketUDP);
-    }
-    if (ClientSocketUDP != INVALID_SOCKET) {
-        iResult = shutdown(ClientSocketUDP, SD_SEND);
+        iResult = shutdown(ListenSocketUDP, SD_SEND);
         if (iResult == SOCKET_ERROR) {
             printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
             code = 1;
         }
-        closesocket(ClientSocketUDP);
+        closesocket(ListenSocketUDP);
     }
 
     if (resultTCP != NULL)
