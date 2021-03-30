@@ -20,7 +20,7 @@
 SOCKET ListenSocketUDP = INVALID_SOCKET;
 
 struct sockaddr_in si_other;
-int slen;
+int slen = sizeof(si_other);
 
 struct addrinfo *resultUDP = NULL;
 struct addrinfo hintsUDP;
@@ -75,10 +75,10 @@ int __cdecl main(void)
     freeaddrinfo(resultUDP);
 
     printf("Listening for connections...\n");
-    
+    /*
     si_other.sin_family = AF_INET; 
-    si_other.sin_port = htons(atoi(UDPORT));
-    si_other.sin_addr.s_addr = htonl(INADDR_ANY);
+    si_other.sin_port = htons((u_short)atoi(UDPORT));
+    si_other.sin_addr.s_addr = htonl(INADDR_ANY);*/
 
     // Receive until the peer shuts down the connection
 
