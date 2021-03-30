@@ -1,15 +1,18 @@
 ﻿  client.cpp
-B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%lld' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%Id' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(160,16): message : consider using '%I64d' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%lld' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%Id' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(183,16): message : consider using '%I64d' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%lld' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%Id' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%I64d' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%lld' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%Id' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%I64d' in the format string
+B:\Documents\GitHub\speedtestnetthing\client.cpp(108,10): warning C4101: 'recvbuf': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(112,19): warning C4101: 'end': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(112,12): warning C4101: 'start': unreferenced local variable
   Generating code
-  1 of 101 functions ( 1.0%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
+  35 of 134 functions (26.1%) were compiled, the rest were copied from previous compilation.
+    33 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\speedynettest.exe

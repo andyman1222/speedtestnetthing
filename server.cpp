@@ -7,6 +7,7 @@
 #include <ws2tcpip.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <thread>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -26,14 +27,68 @@ struct addrinfo hintsTCP, hintsUDP;
 int cleanup(int r);
 void cleanup();
 
+void TCPrecv() {
+    int iResult;
+    int iSendResult;
+    char recvbuf[DEFAULT_BUFLEN];
+    int recvbuflen = DEFAULT_BUFLEN;
+    do {
+        iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
+        if (iResult > 0) {
+            printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
+
+            // Echo the buffer back to the sender
+            iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
+            if (iSendResult == SOCKET_ERROR) {
+                printf("send TCP failed with error: %d\n", WSAGetLastError());
+                cleanup(1);
+            }
+            printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+        }
+        else if (iResult == 0)
+            printf("Connection TCP closing...\n");
+        else {
+            printf("recv TCP failed with error: %d\n", WSAGetLastError());
+            cleanup(1);
+        }
+    } while (iResult > 0);
+    cleanup();
+}
+
+void UDPrecv() {
+    int iResult;
+    int iSendResult;
+    char recvbuf[DEFAULT_BUFLEN];
+    int recvbuflen = DEFAULT_BUFLEN;
+    
+    do {
+        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
+        if (iResult > 0) {
+            printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
+
+            // Echo the buffer back to the sender
+            iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
+            if (iSendResult == SOCKET_ERROR) {
+                printf("send UDP failed with error: %d\n", WSAGetLastError());
+                cleanup(1);
+            }
+            printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+        }
+        else if (iResult == 0)
+            printf("Connection UDP closing...\n");
+        else {
+            printf("recv UDP failed with error: %d\n", WSAGetLastError());
+            cleanup(1);
+        }
+    } while (iResult > 0);
+    cleanup();
+}
 
 int __cdecl main(void)
 {
     atexit(cleanup);
     WSADATA wsaData;
     int iResult;
-
-    
 
     int iSendResult;
     char recvbuf[DEFAULT_BUFLEN];
@@ -137,48 +192,11 @@ int __cdecl main(void)
     closesocket(ListenSocketUDP);*/
 
     // Receive until the peer shuts down the connection
-    do {
-
-        iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
-        if (iResult > 0) {
-            printf("Bytes TCP received: %d\n", iResult);
-
-            // Echo the buffer back to the sender
-            iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
-            if (iSendResult == SOCKET_ERROR) {
-                printf("send TCP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-            printf("Bytes TCP sent: %d\n", iSendResult);
-        }
-        else if (iResult == 0)
-            printf("Connection TCP closing...\n");
-        else {
-            printf("recv TCP failed with error: %d\n", WSAGetLastError());
-            cleanup(1);
-        }
-
-        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
-        if (iResult > 0) {
-            printf("Bytes UDP received: %d\n", iResult);
-
-            // Echo the buffer back to the sender
-            iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
-            if (iSendResult == SOCKET_ERROR) {
-                printf("send UDP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-            printf("Bytes UDP sent: %d\n", iSendResult);
-        }
-        else if (iResult == 0)
-            printf("Connection UDP closing...\n");
-        else {
-            printf("recv UDP failed with error: %d\n", WSAGetLastError());
-            cleanup(1);
-        }
-
-    } while (iResult > 0);
-
+    std::thread TCPt(TCPrecv);
+    std::thread UDPt(UDPrecv);
+    while (1) { Sleep(1); }
+    TCPt.join();
+    UDPt.join();
     // cleanup
     cleanup(0);
 }

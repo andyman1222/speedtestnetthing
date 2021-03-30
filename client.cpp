@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <thread>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -26,6 +27,74 @@ void cleanup();
 
 SOCKET TCP = INVALID_SOCKET, UDP = INVALID_SOCKET;
 struct addrinfo *resultTCP = NULL, *resultUDP = NULL;
+time_t startTCP, startUDP;
+bool recvTCP = false, recvUDP = false;
+
+void TCPrecv() {
+    string sendbuf;
+    char recvbuf[DEFAULT_BUFLEN];
+    int iResult;
+    int recvbuflen = DEFAULT_BUFLEN;
+
+    time_t end;
+    
+    do {
+        //if (recvTCP) {
+            iResult = recv(TCP, recvbuf, recvbuflen, 0);
+            if (iResult > 0) {
+                time(&end);
+                printf("Bytes received TCP: %d\n", iResult);
+                printf("Received \"%s\". Time: %d", recvbuf, (end - startTCP));
+                recvTCP = false;
+            }
+
+            else if (iResult == 0)
+                printf("Connection closed TCP\n");
+            else
+                printf("TCP recv failed with error: %d\n", WSAGetLastError());
+        //}
+        //else {
+         //   Sleep(1);
+        //}
+        
+
+    } while (iResult > 0);
+    cleanup();
+    
+}
+
+void UDPrecv() {
+    string sendbuf;
+    char recvbuf[DEFAULT_BUFLEN];
+    int iResult;
+    int recvbuflen = DEFAULT_BUFLEN;
+
+    time_t end;
+    
+    do {
+        //if (recvTCP) {
+            iResult = recv(UDP, recvbuf, recvbuflen, 0);
+            if (iResult > 0) {
+                time(&end);
+                printf("Bytes received UDP: %d\n", iResult);
+                printf("Received \"%s\". Time: %d", recvbuf, (end - startUDP));
+                recvTCP = false;
+            }
+
+            else if (iResult == 0)
+                printf("Connection closed UDP\n");
+            else
+                printf("UDP recv failed with error: %d\n", WSAGetLastError());
+        //}
+        //else {
+        //    Sleep(1);
+        //}
+        
+
+    } while (iResult > 0);
+    cleanup();
+    
+}
 
 int __cdecl main(int argc, char** argv)
 {
@@ -131,57 +200,39 @@ int __cdecl main(int argc, char** argv)
         cleanup(1);
     }
 
-    printf("Server connection established TCP and UDP");
+    printf("Server connection established TCP and UDP\n");
+
+    thread TCPt(TCPrecv);
+    thread UDPt(UDPrecv);
 
     while (1) {
         printf("Send a message: ");
         cin >> sendbuf;
-        printf("Sending via TCP...");
-        time(&start);
+        printf("Sending via TCP...\n");
+        time(&startTCP);
+        recvTCP = true;
         iResult = send(TCP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
         if (iResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
         printf("Bytes Sent: %ld\n", iResult);
-        // Receive until the peer closes the connection
-        do {
-
-            iResult = recv(TCP, recvbuf, recvbuflen, 0);
-            if (iResult > 0)
-                printf("Bytes received TCP: %d\n", iResult);
-            else if (iResult == 0)
-                printf("Connection closed TCP\n");
-            else
-                printf("TCP recv failed with error: %d\n", WSAGetLastError());
-
-        } while (iResult > 0);
-        time(&end);
-        printf("Received \"%s\". Time: %d", recvbuf, (end - start));
-
         printf("Sending via UDP...");
-        time(&start);
+        time(&startUDP);
+        recvUDP = true;
         iResult = send(UDP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
         if (iResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
-        printf("Bytes Sent: %ld\n", iResult);
-        // Receive until the peer closes the connection
-        do {
-
-            iResult = recv(UDP, recvbuf, recvbuflen, 0);
-            if (iResult > 0)
-                printf("Bytes received UDP: %d\n", iResult);
-            else if (iResult == 0)
-                printf("Connection closed UDP\n");
-            else
-                printf("UDP recv failed with error: %d\n", WSAGetLastError());
-
-        } while (iResult > 0);
-        time(&end);
-        printf("Received \"%s\". Time: %d", recvbuf, (end - start));
+        printf("Bytes Sent: %ld\n", iResult);        
     }
+
+    recvTCP = true;
+    recvUDP = true;
+    TCPt.join();
+    UDPt.join();
+
     // cleanup
     cleanup(0);
 }
