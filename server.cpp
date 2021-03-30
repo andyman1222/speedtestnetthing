@@ -49,13 +49,13 @@ int __cdecl main(void)
 
     ZeroMemory(&hintsTCP, sizeof(hintsTCP));
     hintsTCP.ai_family = AF_INET;
-    hintsTCP.ai_socktype = SOCK_STREAM;
+    hintsTCP.ai_socktype = SOCK_DGRAM;
     hintsTCP.ai_protocol = IPPROTO_TCP;
     hintsTCP.ai_flags = AI_PASSIVE;
 
     ZeroMemory(&hintsUDP, sizeof(hintsUDP));
     hintsUDP.ai_family = AF_INET;
-    hintsUDP.ai_socktype = SOCK_STREAM;
+    hintsUDP.ai_socktype = SOCK_DGRAM;
     hintsUDP.ai_protocol = IPPROTO_UDP;
     hintsUDP.ai_flags = AI_PASSIVE;
 

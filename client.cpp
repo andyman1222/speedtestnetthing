@@ -57,12 +57,12 @@ int __cdecl main(int argc, char** argv)
 
     ZeroMemory(&hintsTCP, sizeof(hintsTCP));
     hintsTCP.ai_family = AF_UNSPEC;
-    hintsTCP.ai_socktype = SOCK_STREAM;
+    hintsTCP.ai_socktype = SOCK_DGRAM;
     hintsTCP.ai_protocol = IPPROTO_TCP;
 
     ZeroMemory(&hintsUDP, sizeof(hintsUDP));
     hintsUDP.ai_family = AF_UNSPEC;
-    hintsUDP.ai_socktype = SOCK_STREAM;
+    hintsUDP.ai_socktype = SOCK_DGRAM;
     hintsUDP.ai_protocol = IPPROTO_UDP;
 
     // Resolve the server address and port
