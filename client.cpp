@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <thread>
+#include <chrono>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -27,7 +28,7 @@ void cleanup();
 
 SOCKET TCP = INVALID_SOCKET, UDP = INVALID_SOCKET;
 struct addrinfo *resultTCP = NULL, *resultUDP = NULL;
-time_t startTCP, startUDP;
+chrono::high_resolution_clock::time_point startTCP, startUDP;
 bool recvTCP = false, recvUDP = false;
 
 void TCPrecv() {
@@ -36,13 +37,13 @@ void TCPrecv() {
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
 
-    time_t end;
+    chrono::high_resolution_clock::time_point end;
     
     do {
         //if (recvTCP) {
             iResult = recv(TCP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
-                time(&end);
+                end = chrono::high_resolution_clock::now();
                 printf("Bytes received TCP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d", recvbuf, (end - startTCP));
                 recvTCP = false;
@@ -69,13 +70,13 @@ void UDPrecv() {
     int iResult;
     int recvbuflen = DEFAULT_BUFLEN;
 
-    time_t end;
+    chrono::high_resolution_clock::time_point end;
     
     do {
         //if (recvTCP) {
             iResult = recv(UDP, recvbuf, recvbuflen, 0);
             if (iResult > 0) {
-                time(&end);
+                end = chrono::high_resolution_clock::now();
                 printf("Bytes received UDP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d", recvbuf, (end - startUDP));
                 recvTCP = false;
@@ -209,23 +210,23 @@ int __cdecl main(int argc, char** argv)
         printf("Send a message: ");
         cin >> sendbuf;
         printf("Sending via TCP...\n");
-        time(&startTCP);
+        startTCP = chrono::high_resolution_clock::now();
         recvTCP = true;
         iResult = send(TCP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
         if (iResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
-        printf("Bytes Sent: %ld\n", iResult);
-        printf("Sending via UDP...");
-        time(&startUDP);
+        printf("Bytes Sent TCP: %ld\n", iResult);
+        printf("Sending via UDP...\n");
+        startUDP = chrono::high_resolution_clock::now();
         recvUDP = true;
         iResult = send(UDP, sendbuf.c_str(), (int)strlen(sendbuf.c_str()), 0);
         if (iResult == SOCKET_ERROR) {
             printf("send failed with error: %d\n", WSAGetLastError());
             cleanup(1);
         }
-        printf("Bytes Sent: %ld\n", iResult);        
+        printf("Bytes Sent UDP: %ld\n", iResult);        
     }
 
     recvTCP = true;

@@ -163,6 +163,8 @@ int __cdecl main(void)
         printf("listen TCP failed with error: %d\n", WSAGetLastError());
         cleanup(1);
     }
+
+    printf("Listening for connections...");
     /*listening and accepting apparently is only for TCP
     iResult = listen(ListenSocketUDP, SOMAXCONN);
     if (iResult == SOCKET_ERROR) {
@@ -192,6 +194,7 @@ int __cdecl main(void)
     closesocket(ListenSocketUDP);*/
 
     // Receive until the peer shuts down the connection
+    printf("Client connected. Beginning threads...");
     std::thread TCPt(TCPrecv);
     std::thread UDPt(UDPrecv);
     while (1) { Sleep(1); }
