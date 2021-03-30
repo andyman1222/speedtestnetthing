@@ -19,6 +19,9 @@
 
 SOCKET ListenSocketUDP = INVALID_SOCKET;
 
+struct sockaddr_in si_other;
+int slen;
+
 struct addrinfo *resultUDP = NULL;
 struct addrinfo hintsUDP;
 
@@ -75,39 +78,32 @@ int __cdecl main(void)
     
 
     // Receive until the peer shuts down the connection
-    printf("Client connected. Beginning threads...\n");
-    //std::thread TCPt(TCPrecv);
-    //std::thread UDPt(UDPrecv);
-    while (1) {
-        printf("TCP listen start\n");
 
-        do {
-            
-               
-            iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
+    do {
+        iResult = recv(ListenSocketUDP, recvbuf, recvbuflen, 0);
+        iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (struct sockaddr*)&si_other, &slen);
+        if (iResult > 0) {
+            printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
 
-                // Echo the buffer back to the sender
-                iSendResult = send(ListenSocketUDP, recvbuf, iResult, 0);
-                if (iSendResult == SOCKET_ERROR) {
-                    printf("send UDP failed with error: %d\n", WSAGetLastError());
-                    cleanup(1);
-                }
-                printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
-            }
-            else if (iResult == 0) {
-                printf("Connection UDP closing...\n");
-                cleanup();
-            }
-
-            else {
-                printf("recv UDP failed with error: %d\n", WSAGetLastError());
+            // Echo the buffer back to the sender
+            iSendResult = sendto(ListenSocketUDP, recvbuf, iResult, 0, (struct sockaddr*)&si_other, slen);
+            if (iSendResult == SOCKET_ERROR) {
+                printf("send UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
-            }     
-        } while (iResult > 0);
-        cleanup();
-    }
+            }
+            printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+        }
+        else if (iResult == 0) {
+            printf("Connection UDP closing...\n");
+            cleanup();
+        }
+
+        else {
+            printf("recv UDP failed with error: %d\n", WSAGetLastError());
+            cleanup(1);
+        }     
+    } while (iResult > 0);
+    cleanup();
 
     // cleanup
     cleanup(0);

@@ -92,10 +92,9 @@ int __cdecl main(void)
     
 
     // Receive until the peer shuts down the connection
-    printf("Client connected. Beginning threads...\n");
+    printf("Client connected.\n");
 
     while (1) {
-        printf("TCP listen start\n");
 
         do {
             
