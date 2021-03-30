@@ -1,18 +1,12 @@
 ﻿  client.cpp
-B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%lld' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%Id' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(47,24): message : consider using '%I64d' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'time_t'
-B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%lld' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%Id' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(80,24): message : consider using '%I64d' in the format string
-B:\Documents\GitHub\speedtestnetthing\client.cpp(108,10): warning C4101: 'recvbuf': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(112,19): warning C4101: 'end': unreferenced local variable
-B:\Documents\GitHub\speedtestnetthing\client.cpp(112,12): warning C4101: 'start': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(48,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(81,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
+B:\Documents\GitHub\speedtestnetthing\client.cpp(109,10): warning C4101: 'recvbuf': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(113,19): warning C4101: 'end': unreferenced local variable
+B:\Documents\GitHub\speedtestnetthing\client.cpp(113,12): warning C4101: 'start': unreferenced local variable
   Generating code
-  35 of 134 functions (26.1%) were compiled, the rest were copied from previous compilation.
-    33 functions were new in current compilation
+  13 of 143 functions ( 9.1%) were compiled, the rest were copied from previous compilation.
+    10 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\speedynettest.exe
