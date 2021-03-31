@@ -23,7 +23,7 @@
 
 using namespace std;
 
-#define DEFAULT_BUFLEN 512
+#define DEFAULT_BUFLEN 4096
 string UDPORT = "27016";
 
 

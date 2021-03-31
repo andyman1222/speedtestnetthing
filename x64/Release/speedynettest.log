@@ -1,15 +1,8 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(491,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (speedynettest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  UDPclient.cpp
-B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(144,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(155,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(156,24): warning C4244: 'initializing': conversion from '_Rep' to 'long', possible loss of data
-          with
-          [
-              _Rep=__int64
-          ]
   Generating code
-  1 of 182 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
+B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(213): warning C4715: 'cleanup': not all control paths return a value
+  10 of 182 functions ( 5.5%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+    2 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\UDPclient.exe

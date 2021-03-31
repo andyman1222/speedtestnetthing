@@ -24,10 +24,6 @@
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 
-
-#define DEFAULT_BUFLEN 512
-
-
 using namespace std;
 
 int cleanup(int r);
@@ -45,9 +41,9 @@ SOCKET TCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
 chrono::high_resolution_clock::time_point startTCP;
 char* sendbuf = (char*)malloc(4096);
-char recvbuf[DEFAULT_BUFLEN];
+char* recvbuf;
 int iResult;
-int recvbuflen = DEFAULT_BUFLEN;
+int recvbuflen;
 ofstream myfile("TCP.csv", ios::out | ios::app);
 bool connectionActive = false;
 
@@ -105,7 +101,7 @@ int __cdecl main(int argc, char** argv)
 
     // Attempt to connect to an address until one succeeds
 
-    printf("Attempting to connect %s:%s", ADDR.c_str(), TCPORT.c_str());
+    printf("Attempting to connect %s:%s\n", ADDR.c_str(), TCPORT.c_str());
 
     for (ptr = resultTCP; ptr != NULL; ptr = ptr->ai_next) {
 
@@ -138,31 +134,42 @@ int __cdecl main(int argc, char** argv)
             printf("Send a message: ");
             cin >> sendbuf;
             printf("Sending via TCP \"%s\"...\n", sendbuf);
+            int sum = 0;
             startTCP = chrono::high_resolution_clock::now();
-            iResult = send(TCP, sendbuf, strlen(sendbuf)+1, 0);
-            if (iResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-            printf("Bytes Sent TCP: %ld\n", iResult);
+            do {
+                iResult = send(TCP, *(&sendbuf+sum), (strlen(sendbuf) + 1)-sum, 0);
+                if (iResult == SOCKET_ERROR) {
+                    printf("send failed with error: %d\n", WSAGetLastError());
+                    cleanup(1);
+                }
+                sum += iResult;
+                printf("Bytes Sent TCP: %ld\n", iResult);
+            } while (sum < strlen(sendbuf) + 1);
             printf("Listening TCP...\n");
-            iResult = recv(TCP, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                end = chrono::high_resolution_clock::now();
-                printf("Bytes received TCP: %d\n", iResult);
-                printf("Received \"%s\". Time: %d\n", recvbuf, (end - startTCP));
-                long r = (end - startTCP).count();
-                myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
-            }
-            else if (iResult == 0) {
-                printf("Connection UDP closing...\n");
-                cleanup();
-            }
+            recvbuflen = (strlen(sendbuf) + 1);
+            recvbuf = (char*)malloc(recvbuflen * sizeof(char));
+            sum = 0;
+            do {
+                iResult = recv(TCP, *(&recvbuf+sum), recvbuflen-sum, 0);
+                if (iResult > 0) {
+                    printf("Bytes received TCP: %d\n", iResult);
+                    sum += iResult;
+                }
+                else if (iResult == 0) {
+                    printf("Connection TCP closing...\n");
+                    cleanup();
+                }
 
-            else {
-                printf("recv UDP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
+                else {
+                    printf("recv TCP failed with error: %d\n", WSAGetLastError());
+                    cleanup(1);
+                }
+            } while (sum < strlen(sendbuf) + 1);
+            end = chrono::high_resolution_clock::now();
+            long r = (end - startTCP).count();
+            myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
+            printf("Received \"%s\". Time: %d\n", recvbuf, r);
+            free(recvbuf);
         }
 
 
