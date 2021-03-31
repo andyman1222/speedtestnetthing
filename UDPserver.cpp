@@ -1,3 +1,9 @@
+/**
+*
+* THIS CODE HAS ORIGINATED AND BEEN MODIFIED FROM https://docs.microsoft.com/en-us/windows/win32/winsock/complete-server-code AND OTHER SOURCES
+*
+**/
+
 #undef UNICODE
 
 #define WIN32_LEAN_AND_MEAN
@@ -8,13 +14,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <thread>
+#include <string>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
 
+using namespace std;
+
 #define DEFAULT_BUFLEN 512
-#define UDPORT "27016"
+string UDPORT = "27016";
 
 
 SOCKET ListenSocketUDP = INVALID_SOCKET;
@@ -28,15 +37,19 @@ struct addrinfo hintsUDP;
 int cleanup(int r);
 void cleanup();
 
+WSADATA wsaData;
+int iResult;
+
+int iSendResult;
+char recvbuf[DEFAULT_BUFLEN];
+int recvbuflen = DEFAULT_BUFLEN;
+
+
+
 int __cdecl main(void)
 {
     atexit(cleanup);
-    WSADATA wsaData;
-    int iResult;
-
-    int iSendResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
+    
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -52,7 +65,7 @@ int __cdecl main(void)
     hintsUDP.ai_flags = AI_PASSIVE;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(NULL, UDPORT, &hintsUDP, &resultUDP);
+    iResult = getaddrinfo(NULL, UDPORT.c_str(), &hintsUDP, &resultUDP);
     if (iResult != 0) {
         printf("getaddrinfo UDP failed with error: %d\n", iResult);
         cleanup(1);
@@ -75,17 +88,17 @@ int __cdecl main(void)
     freeaddrinfo(resultUDP);
 
     printf("Listening for connections...\n");
-    /*
-    si_other.sin_family = AF_INET; 
-    si_other.sin_port = htons((u_short)atoi(UDPORT));
-    si_other.sin_addr.s_addr = htonl(INADDR_ANY);*/
+
+    //UDP doesn't have listen/accept, so simply take any data just received and send back to sender. No need to keep track of who's still connected.
+    //Alright I could do keep-alive but I'll just let the client fail on server shutdown instead
 
     // Receive until the peer shuts down the connection
-
+    char addr[INET_ADDRSTRLEN];
     do {
         iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (SOCKADDR *)&si_other, &slen);
+        inet_ntop(AF_INET, &si_other.sin_addr, addr, sizeof(addr));
         if (iResult > 0) {
-            printf("Bytes UDP received: %d; message: \"%s\"\n", iResult, recvbuf);
+            printf("Bytes UDP received: %d; message: \"%s\"; client: %s\n", iResult, recvbuf, addr);
 
             // Echo the buffer back to the sender
             iSendResult = sendto(ListenSocketUDP, recvbuf, iResult, 0, (SOCKADDR *)&si_other, slen);
@@ -93,7 +106,7 @@ int __cdecl main(void)
                 printf("send UDP failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
             }
-            printf("Bytes UDP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
+            printf("Bytes UDP sent: %d; message: \"%s\"; client: %s\n", iResult, recvbuf, addr);
         }
         else if (iResult == 0) {
             printf("Connection UDP closing...\n");
@@ -105,7 +118,6 @@ int __cdecl main(void)
             cleanup(1);
         }     
     } while (iResult > 0);
-    cleanup();
 
     // cleanup
     cleanup(0);
@@ -117,7 +129,6 @@ void cleanup() {
 
 int cleanup(int code) {
     // shutdown the connection since no more data will be sent
-    int iResult;
     printf("Cleaning up...");
 
 

@@ -1,3 +1,9 @@
+/**
+*
+* THIS CODE HAS ORIGINATED AND BEEN MODIFIED FROM https://docs.microsoft.com/en-us/windows/win32/winsock/complete-server-code AND OTHER SOURCES
+*
+**/
+
 #undef UNICODE
 
 #define WIN32_LEAN_AND_MEAN
@@ -8,13 +14,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <thread>
+#include <string>
+#include <list>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
 // #pragma comment (lib, "Mswsock.lib")
 
+using namespace std;
+
 #define DEFAULT_BUFLEN 512
-#define TCPORT "27015"
+string TCPORT = "27015";
 
 SOCKET ListenSocketTCP = INVALID_SOCKET;
 SOCKET ClientSocketTCP = INVALID_SOCKET;
@@ -22,18 +32,74 @@ SOCKET ClientSocketTCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
 struct addrinfo hintsTCP;
 
+WSADATA wsaData;
+int iResult;
+
+std::list<HANDLE> con;
+std::list<SOCKET> socks;
+
 int cleanup(int r);
 void cleanup();
+
+bool keepActive = true;
+
+unsigned __stdcall ClientSession(void* data) {
+    char recvbuf[DEFAULT_BUFLEN];
+    int recvbuflen = DEFAULT_BUFLEN;
+    int iResult_;
+    int iSendResult;
+    socks.push_back((SOCKET)data);
+    SOCKET* ClientSocket = &socks.back();
+    
+    sockaddr_in clientInfo;
+    int size = sizeof(clientInfo);
+    getpeername(*ClientSocket, (struct sockaddr*)&clientInfo, &size);
+    char addr[INET_ADDRSTRLEN];
+    inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
+    printf("Client connected: %s", addr);
+    do {
+
+        //printf("Listening TCP...\n");
+        iResult_ = recv(*ClientSocket, recvbuf, recvbuflen, 0);
+        if (iResult_ > 0) {
+            printf("Bytes TCP received: %d; message: \"%s\"; client: %s\n", iResult_, recvbuf, addr);
+
+            // Echo the buffer back to the sender
+            iSendResult = send(*ClientSocket, recvbuf, iResult_, 0);
+            if (iSendResult == SOCKET_ERROR) {
+                printf("send TCP failed with error: %d\n", WSAGetLastError());
+                cleanup(1);
+            }
+            printf("Bytes TCP sent: %d; message: \"%s\"; client: %s\n", iResult_, recvbuf, addr);
+            //do {
+                //if (listenUDP) {
+
+        }
+        else if (iResult_ == 0) {
+            printf("Connection TCP closing...\n");
+                
+        }
+
+        else {
+            printf("recv TCP failed with error: %d\n", WSAGetLastError());
+
+        }
+
+    } while (iResult_ > 0 && keepActive);
+
+    //close connection
+    iResult = shutdown(*ClientSocket, SD_SEND);
+    if (iResult == SOCKET_ERROR) {
+        printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+    }
+    printf("Connection with %s terminated successfully.", addr);
+    ExitThread(0);
+}
 
 int __cdecl main(void)
 {
     atexit(cleanup);
-    WSADATA wsaData;
-    int iResult;
-
-    int iSendResult;
-    char recvbuf[DEFAULT_BUFLEN];
-    int recvbuflen = DEFAULT_BUFLEN;
+    
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -49,7 +115,7 @@ int __cdecl main(void)
     hintsTCP.ai_flags = AI_PASSIVE;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(NULL, TCPORT, &hintsTCP, &resultTCP);
+    iResult = getaddrinfo(NULL, TCPORT.c_str() , &hintsTCP, &resultTCP);
     if (iResult != 0) {
         printf("getaddrinfo TCP failed with error: %d\n", iResult);
         cleanup(1);
@@ -79,53 +145,22 @@ int __cdecl main(void)
 
     printf("Listening for connections...\n");
     
-
-    // Accept a client socket
-    ClientSocketTCP = accept(ListenSocketTCP, NULL, NULL);
-    if (ClientSocketTCP == INVALID_SOCKET) {
-        printf("accept TCP failed with error: %d\n", WSAGetLastError());
-        cleanup(1);
-    }
-
-    // No longer need server socket
-    closesocket(ListenSocketTCP);
+    sockaddr_in clientInfo;
+    int size = sizeof(clientInfo);
+    char addr[INET_ADDRSTRLEN];
     
-
-    // Receive until the peer shuts down the connection
-    printf("Client connected.\n");
-
-    while (1) {
-
-        do {
-            
-            printf("Listening TCP...\n");
-            iResult = recv(ClientSocketTCP, recvbuf, recvbuflen, 0);
-            if (iResult > 0) {
-                printf("Bytes TCP received: %d; message: \"%s\"\n", iResult, recvbuf);
-
-                // Echo the buffer back to the sender
-                iSendResult = send(ClientSocketTCP, recvbuf, iResult, 0);
-                if (iSendResult == SOCKET_ERROR) {
-                    printf("send TCP failed with error: %d\n", WSAGetLastError());
-                    cleanup(1);
-                }
-                printf("Bytes TCP sent: %d; message: \"%s\"\n", iSendResult, recvbuf);
-                //do {
-                    //if (listenUDP) {
-                    
-            }
-            else if (iResult == 0) {
-                printf("Connection TCP closing...\n");
-                cleanup();
-            }
-
-            else {
-                printf("recv TCP failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-
-        } while (iResult > 0);
-        cleanup();
+    // Accept a client socket
+    while(keepActive){
+        ClientSocketTCP = accept(ListenSocketTCP, (struct sockaddr*)&clientInfo, &size);
+        inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
+        if (ClientSocketTCP == INVALID_SOCKET) {
+            printf("accept TCP failed with error: %d\n", WSAGetLastError());
+        }
+        else {
+            printf("Client connected: %s\n", addr);
+            con.push_back((HANDLE)_beginthreadex(NULL, 0, &ClientSession, (void*)ClientSocketTCP, 0, NULL));
+        }
+        
     }
 
     // cleanup
@@ -138,18 +173,29 @@ void cleanup() {
 
 int cleanup(int code) {
     // shutdown the connection since no more data will be sent
-    int iResult;
     printf("Cleaning up...");
+    keepActive = false;
+
     if (ListenSocketTCP != INVALID_SOCKET) {
+
         closesocket(ListenSocketTCP);
     }
+
     if (ClientSocketTCP != INVALID_SOCKET) {
-        iResult = shutdown(ClientSocketTCP, SD_SEND);
-        if (iResult == SOCKET_ERROR) {
-            printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
-            code = 1;
+        for (SOCKET s : socks) {
+            //close connection
+            iResult = shutdown(s, SD_SEND);
+            if (iResult == SOCKET_ERROR) {
+                printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+            }
         }
         closesocket(ClientSocketTCP);
+    }
+
+    for (HANDLE h : con) {
+        WaitForSingleObject(h, 1000); //wait time just in case for some reason socket isn't already closed
+        if (!CloseHandle(h))
+            printf("Thread termination failed. Error: %d", GetLastError());
     }
 
     if (resultTCP != NULL)

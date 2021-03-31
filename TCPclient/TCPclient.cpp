@@ -1,3 +1,9 @@
+/**
+* 
+* THIS CODE HAS ORIGINATED AND BEEN MODIFIED FROM https://docs.microsoft.com/en-us/windows/win32/winsock/complete-client-code AND OTHER SOURCES
+* 
+**/
+
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
@@ -19,25 +25,31 @@
 
 
 #define DEFAULT_BUFLEN 512
-#define TCPORT "27015"
-#define ADDR "a.quantonium.net"
+
 
 using namespace std;
 
 int cleanup(int r);
 void cleanup();
 
+string TCPORT = "27015";
+string ADDR = "a.quantonium.net";
+
+WSADATA wsaData;
 SOCKET TCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
 chrono::high_resolution_clock::time_point startTCP;
-string sendbuf;
+char* sendbuf = (char*)malloc(4096);
+char recvbuf[DEFAULT_BUFLEN];
+int iResult;
+int recvbuflen = DEFAULT_BUFLEN;
 ofstream myfile("TCP.csv", ios::out | ios::app);
+bool connectionActive = false;
 
-using namespace std;
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
-    WSADATA wsaData;
+    
 
     if (!myfile.is_open()) {
         printf("Unable to open file");
@@ -45,11 +57,8 @@ int __cdecl main(int argc, char** argv)
     }
 
     struct addrinfo* ptr = NULL,
-        hintsTCP, hintsUDP;
-    string sendbuf;
-    char recvbuf[DEFAULT_BUFLEN];
-    int iResult;
-    int recvbuflen = DEFAULT_BUFLEN;
+        hintsTCP;
+    
 
     chrono::high_resolution_clock::time_point end;
 
@@ -72,7 +81,7 @@ int __cdecl main(int argc, char** argv)
     hintsTCP.ai_protocol = IPPROTO_TCP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(ADDR, TCPORT, &hintsTCP, &resultTCP);
+    iResult = getaddrinfo(ADDR.c_str(), TCPORT.c_str(), &hintsTCP, &resultTCP);
     if (iResult != 0) {
         printf("getaddrinfo TCP failed with error: %d\n", iResult);
         cleanup(1);
@@ -104,14 +113,14 @@ int __cdecl main(int argc, char** argv)
         cleanup(1);
     }
 
-    printf("Server connection established TCP and UDP\n");
-
+    printf("Server connection established TCP\n");
+    connectionActive = true;
     while (1) {
             printf("Send a message: ");
             cin >> sendbuf;
             printf("Sending via TCP \"%s\"...\n", sendbuf);
             startTCP = chrono::high_resolution_clock::now();
-            iResult = send(TCP, sendbuf.c_str(), (int)sendbuf.length()+1, 0);
+            iResult = send(TCP, sendbuf, strlen(sendbuf)+1, 0);
             if (iResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
@@ -150,13 +159,14 @@ void cleanup() {
 
 int cleanup(int code) {
     // shutdown the connection since no more data will be sent
-    int iResult;
     printf("Cleaning up...");
     if (TCP != INVALID_SOCKET) {
-        iResult = shutdown(TCP, SD_SEND);
-        if (iResult == SOCKET_ERROR) {
-            printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
-            code = 1;
+        if (connectionActive) {
+            iResult = shutdown(TCP, SD_SEND);
+            if (iResult == SOCKET_ERROR) {
+                printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+                code = 1;
+            }
         }
         closesocket(TCP);
     }
@@ -167,6 +177,8 @@ int cleanup(int code) {
     WSACleanup();
 
     myfile.close();
+
+    free(sendbuf);
 
     exit(code);
 }

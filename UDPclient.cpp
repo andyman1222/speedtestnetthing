@@ -1,3 +1,9 @@
+/**
+*
+* THIS CODE HAS ORIGINATED AND BEEN MODIFIED FROM https://docs.microsoft.com/en-us/windows/win32/winsock/complete-client-code AND OTHER SOURCES
+*
+**/
+
 #define WIN32_LEAN_AND_MEAN
 
 #include <windows.h>
@@ -17,24 +23,32 @@
 
 
 #define DEFAULT_BUFLEN 512
-#define UDPORT "27016"
-#define ADDR "a.quantonium.net"
+
+
 
 using namespace std;
 
 int cleanup(int r);
 void cleanup();
 
+string UDPORT = "27016";
+string ADDR = "a.quantonium.net";
+
+WSADATA wsaData;
 SOCKET UDP = INVALID_SOCKET;
 struct addrinfo *resultUDP = NULL;
 chrono::high_resolution_clock::time_point startUDP;
-string sendbuf;
+char* sendbuf = (char*)malloc(4096);
 ofstream myfile("UDP.csv", ios::out | ios::app);
+bool connectionActive = false;
+char recvbuf[DEFAULT_BUFLEN];
+int iResult;
+int recvbuflen = DEFAULT_BUFLEN;
 
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
-    WSADATA wsaData;
+    
     
     if (!myfile.is_open()) {
         printf("Unable to open file");
@@ -42,11 +56,8 @@ int __cdecl main(int argc, char** argv)
     }
     
     struct addrinfo* ptr = NULL,
-        hintsTCP, hintsUDP;
-    string sendbuf;
-    char recvbuf[DEFAULT_BUFLEN];
-    int iResult;
-    int recvbuflen = DEFAULT_BUFLEN;
+        hintsUDP;
+    
 
     chrono::high_resolution_clock::time_point end;
 
@@ -69,7 +80,7 @@ int __cdecl main(int argc, char** argv)
     hintsUDP.ai_protocol = IPPROTO_UDP;
 
     // Resolve the server address and port
-    iResult = getaddrinfo(ADDR, UDPORT, &hintsUDP, &resultUDP);
+    iResult = getaddrinfo(ADDR.c_str(), UDPORT.c_str(), &hintsUDP, &resultUDP);
     if (iResult != 0) {
         printf("getaddrinfo UDP failed with error: %d\n", iResult);
         cleanup(1);
@@ -101,8 +112,8 @@ int __cdecl main(int argc, char** argv)
         cleanup(1);
     }
 
-    printf("Server connection established TCP and UDP\n");
-
+    printf("Server connection established UDP\n");
+    connectionActive = true;
     
     do {
             printf("Send a message: ");
@@ -110,7 +121,7 @@ int __cdecl main(int argc, char** argv)
             
             printf("Sending via UDP \"%s\"...\n", sendbuf);
             startUDP = chrono::high_resolution_clock::now();
-            iResult = send(UDP, sendbuf.c_str(), (int)sendbuf.length()+1, 0);
+            iResult = send(UDP, sendbuf, strlen(sendbuf)+1, 0);
             if (iResult == SOCKET_ERROR) {
                 printf("send failed with error: %d\n", WSAGetLastError());
                 cleanup(1);
@@ -147,14 +158,15 @@ void cleanup() {
 
 int cleanup(int code) {
     // shutdown the connection since no more data will be sent
-    int iResult;
     printf("Cleaning up...");
 
     if (UDP != INVALID_SOCKET) {
-        iResult = shutdown(UDP, SD_SEND);
-        if (iResult == SOCKET_ERROR) {
-            printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
-            code = 1;
+        if (connectionActive) {
+            iResult = shutdown(UDP, SD_SEND);
+            if (iResult == SOCKET_ERROR) {
+                printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
+                code = 1;
+            }
         }
         closesocket(UDP);
     }
@@ -163,5 +175,6 @@ int cleanup(int code) {
         freeaddrinfo(resultUDP);
     WSACleanup();
     myfile.close();
+    free(sendbuf);
     exit(code);
 }
