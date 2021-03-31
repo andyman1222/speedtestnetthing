@@ -110,8 +110,8 @@ int __cdecl main(int argc, char** argv)
     signal(SIGABRT, _cleanup);
     signal(SIGFPE, _cleanup);
 
-    if (argc > 0) {
-        TCPORT = argv[0];
+    if (argc > 1) {
+        TCPORT = argv[1];
     }
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);

@@ -60,10 +60,10 @@ int __cdecl main(int argc, char** argv)
     signal(SIGABRT, _cleanup);
     signal(SIGFPE, _cleanup);
 
-    if (argc > 0) {
-        ADDR = argv[0];
-        if (argc > 1) {
-            TCPORT = argv[1];
+    if (argc > 1) {
+        ADDR = argv[1];
+        if (argc > 2) {
+            TCPORT = argv[2];
         }
     }
 

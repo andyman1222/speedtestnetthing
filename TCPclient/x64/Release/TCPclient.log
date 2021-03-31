@@ -7,8 +7,8 @@ B:\Documents\GitHub\speedtestnetthing\TCPclient\TCPclient.cpp(154,24): warning C
               _Rep=__int64
           ]
   Generating code
-  11 of 182 functions ( 6.0%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    16 functions had inline decision re-evaluated but remain unchanged
+  1 of 182 functions ( 0.5%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   TCPclient.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\TCPclient.exe
