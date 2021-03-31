@@ -5,7 +5,7 @@ Forgive the commit message titles.
 # Run
 in `x64/Release/` run either of the following:
 
-* `UDPclient.exe <server IP\> <Port=27016>`
+* `UDPclient.exe <server IP> <Port=27016>`
 
 * `TCPclient.exe <server IP> <Port=27015>`
 
