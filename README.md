@@ -3,15 +3,15 @@
 Forgive the commit message titles.
 
 # Run
-in x64/Release/ run either of the following:
+in `x64/Release/` run either of the following:
 
-* UDPclient.exe <server IP> <Port=27016>
+* `UDPclient.exe <server IP\> <Port=27016>`
 
-* TCPclient.exe <server IP> <Port=27015>
+* `TCPclient.exe <server IP> <Port=27015>`
 
-* UDPserver.exe <Port=27016>
+* `UDPserver.exe <Port=27016>`
 
-* TCPserver.exe <Port=27015>
+* `TCPserver.exe <Port=27015>`
 
 On the client, enter a text message and press enter. The message will be sent to the specified server, which will send the message back to the client. When the client receives the server's message, the time it took from send to receive will be displayed.
 
