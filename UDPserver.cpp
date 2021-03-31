@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <thread>
 #include <string>
+#include <signal.h>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -36,6 +37,10 @@ struct addrinfo hintsUDP;
 
 int cleanup(int r);
 void cleanup();
+void _cleanup(int r) {
+    printf("Signal received: %d. Terminating program...\n", r);
+    cleanup(r);
+}
 
 WSADATA wsaData;
 int iResult;
@@ -49,7 +54,11 @@ int recvbuflen = DEFAULT_BUFLEN;
 int __cdecl main(void)
 {
     atexit(cleanup);
-    
+    signal(SIGINT, _cleanup);
+    signal(SIGTERM, _cleanup);
+    signal(SIGSEGV, _cleanup);
+    signal(SIGABRT, _cleanup);
+    signal(SIGFPE, _cleanup);
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -127,23 +136,28 @@ void cleanup() {
     cleanup(0);
 }
 
+bool clean = false;
 int cleanup(int code) {
-    // shutdown the connection since no more data will be sent
-    printf("Cleaning up...");
+    if (!clean) {
+
+        clean = true;
+        // shutdown the connection since no more data will be sent
+        printf("Cleaning up... (Errors my occur as sockets DC)\n");
 
 
-    if (ListenSocketUDP != INVALID_SOCKET) {
-        iResult = shutdown(ListenSocketUDP, SD_SEND);
-        if (iResult == SOCKET_ERROR) {
-            printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
-            code = 1;
+        if (ListenSocketUDP != INVALID_SOCKET) {
+            iResult = shutdown(ListenSocketUDP, SD_SEND);
+            if (iResult == SOCKET_ERROR) {
+                printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
+                code = 1;
+            }
+            closesocket(ListenSocketUDP);
         }
-        closesocket(ListenSocketUDP);
+
+        if (resultUDP != NULL)
+            freeaddrinfo(resultUDP);
+        WSACleanup();
+        exit(code);
     }
-
-    if (resultUDP != NULL)
-        freeaddrinfo(resultUDP);
-    WSACleanup();
-
-    exit(code);
+    
 }

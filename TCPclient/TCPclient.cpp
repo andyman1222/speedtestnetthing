@@ -16,6 +16,7 @@
 #include <thread>
 #include <chrono>
 #include <string>
+#include <signal.h>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -31,6 +32,10 @@ using namespace std;
 
 int cleanup(int r);
 void cleanup();
+void _cleanup(int r) {
+    printf("Signal received: %d. Terminating program...\n", r);
+    cleanup(r);
+}
 
 string TCPORT = "27015";
 string ADDR = "a.quantonium.net";
@@ -49,7 +54,11 @@ bool connectionActive = false;
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
-    
+    signal(SIGINT, _cleanup);
+    signal(SIGTERM, _cleanup);
+    signal(SIGSEGV, _cleanup);
+    signal(SIGABRT, _cleanup);
+    signal(SIGFPE, _cleanup);
 
     if (!myfile.is_open()) {
         printf("Unable to open file");
@@ -157,28 +166,32 @@ void cleanup() {
     cleanup(0);
 }
 
+bool clean = false;
 int cleanup(int code) {
-    // shutdown the connection since no more data will be sent
-    printf("Cleaning up...");
-    if (TCP != INVALID_SOCKET) {
-        if (connectionActive) {
-            iResult = shutdown(TCP, SD_SEND);
-            if (iResult == SOCKET_ERROR) {
-                printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
-                code = 1;
+    if (!clean){
+        clean = true;
+        // shutdown the connection since no more data will be sent
+        printf("Cleaning up...");
+        if (TCP != INVALID_SOCKET) {
+            if (connectionActive) {
+                iResult = shutdown(TCP, SD_SEND);
+                if (iResult == SOCKET_ERROR) {
+                    printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+                    code = 1;
+                }
             }
+            closesocket(TCP);
         }
-        closesocket(TCP);
+
+        if (resultTCP != NULL)
+            freeaddrinfo(resultTCP);
+
+        WSACleanup();
+
+        myfile.close();
+
+        free(sendbuf);
+
+        exit(code);
     }
-
-    if (resultTCP != NULL)
-        freeaddrinfo(resultTCP);
-
-    WSACleanup();
-
-    myfile.close();
-
-    free(sendbuf);
-
-    exit(code);
 }

@@ -1,5 +1,7 @@
-﻿  Generating code
-  0 of 183 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+﻿  TCPserver.cpp
+  Generating code
+B:\Documents\GitHub\speedtestnetthing\TCPserver\TCPserver.cpp(220): warning C4715: 'cleanup': not all control paths return a value
+  5 of 184 functions ( 2.7%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
     0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code

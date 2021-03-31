@@ -15,6 +15,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <signal.h>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -30,6 +31,10 @@ using namespace std;
 
 int cleanup(int r);
 void cleanup();
+void _cleanup(int r) {
+    printf("Signal received: %d. Terminating program...\n", r);
+    cleanup(r);
+}
 
 string UDPORT = "27016";
 string ADDR = "a.quantonium.net";
@@ -48,7 +53,11 @@ int recvbuflen = DEFAULT_BUFLEN;
 int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
-    
+    signal(SIGINT, _cleanup);
+    signal(SIGTERM, _cleanup);
+    signal(SIGSEGV, _cleanup);
+    signal(SIGABRT, _cleanup);
+    signal(SIGFPE, _cleanup);
     
     if (!myfile.is_open()) {
         printf("Unable to open file");
@@ -156,25 +165,30 @@ void cleanup() {
     cleanup(0);
 }
 
+bool clean = false;
 int cleanup(int code) {
-    // shutdown the connection since no more data will be sent
-    printf("Cleaning up...");
+    if(!clean){
+        clean = true;
+        // shutdown the connection since no more data will be sent
+        printf("Cleaning up... (errors may occur as sockets DC)\n");
 
-    if (UDP != INVALID_SOCKET) {
-        if (connectionActive) {
-            iResult = shutdown(UDP, SD_SEND);
-            if (iResult == SOCKET_ERROR) {
-                printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
-                code = 1;
+        if (UDP != INVALID_SOCKET) {
+            if (connectionActive) {
+                iResult = shutdown(UDP, SD_SEND);
+                if (iResult == SOCKET_ERROR) {
+                    printf("shutdown UDP failed with error: %d\n", WSAGetLastError());
+                    code = 1;
+                }
             }
+            closesocket(UDP);
         }
-        closesocket(UDP);
-    }
 
-    if (resultUDP != NULL)
-        freeaddrinfo(resultUDP);
-    WSACleanup();
-    myfile.close();
-    free(sendbuf);
-    exit(code);
+        if (resultUDP != NULL)
+            freeaddrinfo(resultUDP);
+        WSACleanup();
+        myfile.close();
+        free(sendbuf);
+        exit(code);
+    }
+    
 }

@@ -16,6 +16,7 @@
 #include <thread>
 #include <string>
 #include <list>
+#include <signal.h>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -40,6 +41,10 @@ std::list<SOCKET> socks;
 
 int cleanup(int r);
 void cleanup();
+void _cleanup(int r) {
+    printf("Signal received: %d. Terminating program...\n", r);
+    cleanup(r);
+}
 
 bool keepActive = true;
 
@@ -56,7 +61,7 @@ unsigned __stdcall ClientSession(void* data) {
     getpeername(*ClientSocket, (struct sockaddr*)&clientInfo, &size);
     char addr[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
-    printf("Client connected: %s", addr);
+    printf("Client connected: %s\n", addr);
     do {
 
         //printf("Listening TCP...\n");
@@ -81,7 +86,7 @@ unsigned __stdcall ClientSession(void* data) {
         }
 
         else {
-            printf("recv TCP failed with error: %d\n", WSAGetLastError());
+            printf("recv TCP failed with error: %d (Note: Client could've disconnected their end)\n", WSAGetLastError());
 
         }
 
@@ -99,8 +104,11 @@ unsigned __stdcall ClientSession(void* data) {
 int __cdecl main(void)
 {
     atexit(cleanup);
-    
-
+    signal(SIGINT, _cleanup);
+    signal(SIGTERM, _cleanup);
+    signal(SIGSEGV, _cleanup);
+    signal(SIGABRT, _cleanup);
+    signal(SIGFPE, _cleanup);
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
@@ -157,7 +165,7 @@ int __cdecl main(void)
             printf("accept TCP failed with error: %d\n", WSAGetLastError());
         }
         else {
-            printf("Client connected: %s\n", addr);
+            //printf("Client connected: %s\n", addr);
             con.push_back((HANDLE)_beginthreadex(NULL, 0, &ClientSession, (void*)ClientSocketTCP, 0, NULL));
         }
         
@@ -171,37 +179,42 @@ void cleanup() {
     cleanup(0);
 }
 
+bool clean = false;
 int cleanup(int code) {
-    // shutdown the connection since no more data will be sent
-    printf("Cleaning up...");
-    keepActive = false;
+    if (!clean) {
+        clean = true;
+        // shutdown the connection since no more data will be sent
+        printf("Cleaning up... (Error messages may occur as sockets DC)\n");
+        keepActive = false;
 
-    if (ListenSocketTCP != INVALID_SOCKET) {
+        if (ListenSocketTCP != INVALID_SOCKET) {
 
-        closesocket(ListenSocketTCP);
-    }
-
-    if (ClientSocketTCP != INVALID_SOCKET) {
-        for (SOCKET s : socks) {
-            //close connection
-            iResult = shutdown(s, SD_SEND);
-            if (iResult == SOCKET_ERROR) {
-                printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
-            }
+            closesocket(ListenSocketTCP);
         }
-        closesocket(ClientSocketTCP);
+
+        if (ClientSocketTCP != INVALID_SOCKET) {
+            for (SOCKET s : socks) {
+                //close connection
+                iResult = shutdown(s, SD_SEND);
+                if (iResult == SOCKET_ERROR) {
+                    printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
+                }
+            }
+            closesocket(ClientSocketTCP);
+        }
+
+        for (HANDLE h : con) {
+            WaitForSingleObject(h, 1000); //wait time just in case for some reason socket isn't already closed
+            if (!CloseHandle(h))
+                printf("Thread termination failed. Error: %d", GetLastError());
+        }
+
+        if (resultTCP != NULL)
+            freeaddrinfo(resultTCP);
+
+        WSACleanup();
+        exit(code);
     }
 
-    for (HANDLE h : con) {
-        WaitForSingleObject(h, 1000); //wait time just in case for some reason socket isn't already closed
-        if (!CloseHandle(h))
-            printf("Thread termination failed. Error: %d", GetLastError());
-    }
-
-    if (resultTCP != NULL)
-        freeaddrinfo(resultTCP);
-
-    WSACleanup();
-
-    exit(code);
+    
 }
