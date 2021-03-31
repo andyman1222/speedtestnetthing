@@ -101,7 +101,7 @@ unsigned __stdcall ClientSession(void* data) {
     ExitThread(0);
 }
 
-int __cdecl main(void)
+int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
     signal(SIGINT, _cleanup);
@@ -109,6 +109,10 @@ int __cdecl main(void)
     signal(SIGSEGV, _cleanup);
     signal(SIGABRT, _cleanup);
     signal(SIGFPE, _cleanup);
+
+    if (argc > 0) {
+        TCPORT = argv[0];
+    }
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (iResult != 0) {
@@ -151,11 +155,15 @@ int __cdecl main(void)
         cleanup(1);
     }
 
-    printf("Listening for connections...\n");
-    
     sockaddr_in clientInfo;
     int size = sizeof(clientInfo);
     char addr[INET_ADDRSTRLEN];
+    getsockname(ListenSocketTCP, (struct sockaddr*)&clientInfo, &size);
+    inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
+    printf("Listening for connections on %s:%s...\n", addr, TCPORT.c_str());
+    
+    
+    
     
     // Accept a client socket
     while(keepActive){

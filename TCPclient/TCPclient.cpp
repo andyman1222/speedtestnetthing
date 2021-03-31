@@ -60,6 +60,13 @@ int __cdecl main(int argc, char** argv)
     signal(SIGABRT, _cleanup);
     signal(SIGFPE, _cleanup);
 
+    if (argc > 0) {
+        ADDR = argv[0];
+        if (argc > 1) {
+            TCPORT = argv[1];
+        }
+    }
+
     if (!myfile.is_open()) {
         printf("Unable to open file");
         return 1;
@@ -97,6 +104,9 @@ int __cdecl main(int argc, char** argv)
     }
 
     // Attempt to connect to an address until one succeeds
+
+    printf("Attempting to connect %s:%s", ADDR.c_str(), TCPORT.c_str());
+
     for (ptr = resultTCP; ptr != NULL; ptr = ptr->ai_next) {
 
         // Create a SOCKET for connecting to server
@@ -142,7 +152,7 @@ int __cdecl main(int argc, char** argv)
                 printf("Bytes received TCP: %d\n", iResult);
                 printf("Received \"%s\". Time: %d\n", recvbuf, (end - startTCP));
                 long r = (end - startTCP).count();
-                myfile << "" << iResult << "," << r << "\n";
+                myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
             }
             else if (iResult == 0) {
                 printf("Connection UDP closing...\n");

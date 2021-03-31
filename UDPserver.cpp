@@ -51,7 +51,7 @@ int recvbuflen = DEFAULT_BUFLEN;
 
 
 
-int __cdecl main(void)
+int __cdecl main(int argc, char** argv)
 {
     atexit(cleanup);
     signal(SIGINT, _cleanup);
@@ -59,6 +59,10 @@ int __cdecl main(void)
     signal(SIGSEGV, _cleanup);
     signal(SIGABRT, _cleanup);
     signal(SIGFPE, _cleanup);
+
+    if (argc > 0) {
+        UDPORT = argv[0];
+    }
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -102,7 +106,12 @@ int __cdecl main(void)
     //Alright I could do keep-alive but I'll just let the client fail on server shutdown instead
 
     // Receive until the peer shuts down the connection
+    sockaddr_in clientInfo;
+    int size = sizeof(clientInfo);
     char addr[INET_ADDRSTRLEN];
+    getsockname(ListenSocketUDP, (struct sockaddr*)&clientInfo, &size);
+    inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
+    printf("Listening for connections on %s:%s...\n", addr, UDPORT.c_str());
     do {
         iResult = recvfrom(ListenSocketUDP, recvbuf, recvbuflen, 0, (SOCKADDR *)&si_other, &slen);
         inet_ntop(AF_INET, &si_other.sin_addr, addr, sizeof(addr));
