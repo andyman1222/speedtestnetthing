@@ -1,14 +1,6 @@
-﻿  TCPclient.cpp
-B:\Documents\GitHub\speedtestnetthing\TCPclient\TCPclient.cpp(123,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-B:\Documents\GitHub\speedtestnetthing\TCPclient\TCPclient.cpp(134,24): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'std::chrono::duration<__int64,std::nano>'
-B:\Documents\GitHub\speedtestnetthing\TCPclient\TCPclient.cpp(135,24): warning C4244: 'initializing': conversion from '_Rep' to 'long', possible loss of data
-          with
-          [
-              _Rep=__int64
-          ]
-  Generating code
-  45 of 180 functions (25.0%) were compiled, the rest were copied from previous compilation.
-    14 functions were new in current compilation
-    8 functions had inline decision re-evaluated but remain unchanged
+﻿  Generating code
+  0 of 180 functions ( 0.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   TCPclient.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\TCPclient.exe
