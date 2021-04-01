@@ -18,6 +18,7 @@
 #include <chrono>
 #include <fstream>
 #include <signal.h>
+#include <string>
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -40,7 +41,7 @@ WSADATA wsaData;
 SOCKET UDP = INVALID_SOCKET;
 struct addrinfo *resultUDP = NULL;
 chrono::high_resolution_clock::time_point startUDP;
-char* sendbuf = (char*)malloc(4096);
+char* sendbuf;
 ofstream myfile("UDP.csv", ios::out | ios::app);
 bool connectionActive = false;
 char* recvbuf;
@@ -132,7 +133,10 @@ int __cdecl main(int argc, char** argv)
     
     do {
         printf("Send a message: ");
-        cin >> sendbuf;
+        string in;
+        getline(cin, in);
+        sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
+        memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
         printf("Sending via UDP \"%s\"...\n", sendbuf);
         int sum = 0;
             
@@ -171,6 +175,7 @@ int __cdecl main(int argc, char** argv)
         printf("Received \"%s\". Time: %d\n", recvbuf, r);
         myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
         free(recvbuf);
+        free(sendbuf);
             
     } while (iResult > 0);
         
@@ -206,7 +211,8 @@ int cleanup(int code) {
             freeaddrinfo(resultUDP);
         WSACleanup();
         myfile.close();
-        free(sendbuf);
+        if(sendbuf != NULL) free(sendbuf);
+        if (recvbuf != NULL) free(recvbuf);
         exit(code);
     }
     
