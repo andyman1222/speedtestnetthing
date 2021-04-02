@@ -41,12 +41,62 @@ WSADATA wsaData;
 SOCKET UDP = INVALID_SOCKET;
 struct addrinfo *resultUDP = NULL;
 chrono::high_resolution_clock::time_point startUDP;
-char* sendbuf;
+chrono::high_resolution_clock::time_point endUDP;
+//char* sendbuf;
 ofstream myfile("UDP.csv", ios::out | ios::app);
 bool connectionActive = false;
 char* recvbuf;
 int iResult;
 int recvbuflen;
+
+bool test(char* sendbuf) {
+
+    printf("Sending via UDP \"%s\"... Expected size: %d\n", sendbuf, strlen(sendbuf)+1);
+    int sum = 0;
+
+    startUDP = chrono::high_resolution_clock::now();
+    do {
+        iResult = send(UDP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
+        if (iResult == SOCKET_ERROR) {
+            printf("send failed with error: %d\n", WSAGetLastError());
+            free(recvbuf);
+            return false;
+        }
+        sum += iResult;
+        printf("Bytes Sent UDP: %ld\n", iResult);
+    } while (sum < strlen(sendbuf) + 1);
+    printf("Listening UDP...\n");
+    recvbuflen = (strlen(sendbuf) + 1);
+    recvbuf = (char*)malloc(recvbuflen * sizeof(char));
+    sum = 0;
+    do {
+        iResult = recv(UDP, *(&recvbuf + sum), recvbuflen - sum, 0);
+        if (iResult > 0) {
+
+            printf("Bytes received UDP: %d\n", iResult);
+            sum += iResult;
+        }
+
+        else if (iResult == 0) {
+            printf("Connection closed UDP\n");
+            free(recvbuf);
+            return false;
+        }
+
+        else {
+            printf("UDP recv failed with error: %d\n", WSAGetLastError());
+            free(recvbuf);
+            return false;
+        }
+            
+    } while (sum < strlen(sendbuf) + 1);
+    endUDP = chrono::high_resolution_clock::now();
+    long r = (endUDP - startUDP).count();
+    printf("Received \"%s\". Time: %d\n", recvbuf, r);
+    myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
+    free(recvbuf);
+    return true;
+}
 
 int __cdecl main(int argc, char** argv)
 {
@@ -71,9 +121,6 @@ int __cdecl main(int argc, char** argv)
     
     struct addrinfo* ptr = NULL,
         hintsUDP;
-    
-
-    chrono::high_resolution_clock::time_point end;
 
     /*// Validate the parameters
     if (argc != 2) {
@@ -131,55 +178,30 @@ int __cdecl main(int argc, char** argv)
     printf("Server connection established UDP\n");
     connectionActive = true;
     
-    do {
-        printf("Send a message: ");
-        string in;
-        getline(cin, in);
-        sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
-        memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
-        printf("Sending via UDP \"%s\"...\n", sendbuf);
-        int sum = 0;
-            
-        startUDP = chrono::high_resolution_clock::now();
-        do{
-            iResult = send(UDP, *(&sendbuf+sum), (strlen(sendbuf)+1)-sum, 0);
-            if (iResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
-                cleanup(1);
-            }
-            sum += iResult;
-            printf("Bytes Sent UDP: %ld\n", iResult);
-        } while (sum < strlen(sendbuf) + 1);
-        printf("Listening UDP...\n");
-        recvbuflen = (strlen(sendbuf) + 1);
-        recvbuf = (char*)malloc(recvbuflen * sizeof(char));
-        sum = 0;
-        do {
-            iResult = recv(UDP, *(&recvbuf+sum), recvbuflen-sum, 0);
-            if (iResult > 0) {
-                    
-                printf("Bytes received UDP: %d\n", iResult);
-                    
-            }
+    printf("Enter max bytes to send (2^x bytes will be sent): x=");
+    int b;
+    cin >> b;
 
-            else if (iResult == 0) {
-                printf("Connection closed UDP\n");
-                cleanup();
+    printf("Enter number of iterations per byte: ");
+    int i;
+    cin >> i;
+
+    for (int ii = 0; ii < b; ii++) {
+        char* s = (char*)malloc(pow(2, ii));
+        for (int r = 0; r < i; r++) {
+            for (int c = 0; c < pow(2, ii); c++)
+                *(s+c) = (char)((rand() % 26) + 'a'); //fill up string with random chars from a to z
+            printf("Test %d: ", r+1);
+            connectionActive = test(s);
+            if (!connectionActive) {
+                printf("Test failed on 2^%d, test %d.\n", ii, r);
+                break;
+                break;
+                break;
             }
-
-            else
-                printf("UDP recv failed with error: %d\n", WSAGetLastError());
-        } while (sum < strlen(sendbuf) + 1);
-        end = chrono::high_resolution_clock::now();
-        long r = (end - startUDP).count();
-        printf("Received \"%s\". Time: %d\n", recvbuf, r);
-        myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
-        free(recvbuf);
-        free(sendbuf);
-            
-    } while (iResult > 0);
-        
-
+        }
+        free(s);
+    }
 
     // cleanup
     cleanup(0);
@@ -209,10 +231,13 @@ int cleanup(int code) {
 
         if (resultUDP != NULL)
             freeaddrinfo(resultUDP);
-        WSACleanup();
         myfile.close();
-        if(sendbuf != NULL) free(sendbuf);
         if (recvbuf != NULL) free(recvbuf);
+        system("pause");
+        WSACleanup();
+        
+        //if(sendbuf != NULL) free(sendbuf);
+        
         exit(code);
     }
     

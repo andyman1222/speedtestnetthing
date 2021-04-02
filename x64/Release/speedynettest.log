@@ -1,8 +1,19 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(491,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (speedynettest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  UDPclient.cpp
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(54,12): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(54,12): message : consider using '%zd' in the format string
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(59,78): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(69,39): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(94,12): warning C4244: 'initializing': conversion from '_Rep' to 'long', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(190,36): warning C4244: 'argument': conversion from 'double' to 'size_t', possible loss of data
   Generating code
-B:\Documents\GitHub\speedtestnetthing\UDPclient.cpp(213): warning C4715: 'cleanup': not all control paths return a value
-  10 of 182 functions ( 5.5%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    2 functions had inline decision re-evaluated but remain unchanged
+C:\Users\herberac\source\repos\speedytestnet\UDPclient.cpp(244): warning C4715: 'cleanup': not all control paths return a value
+  21 of 172 functions (12.2%) were compiled, the rest were copied from previous compilation.
+    1 functions were new in current compilation
+    11 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  speedynettest.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\UDPclient.exe
+  speedynettest.vcxproj -> C:\Users\herberac\source\repos\speedytestnet\x64\Release\UDPclient.exe

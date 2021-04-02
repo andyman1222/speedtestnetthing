@@ -40,13 +40,56 @@ WSADATA wsaData;
 SOCKET TCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
 chrono::high_resolution_clock::time_point startTCP;
-char* sendbuf;
+chrono::high_resolution_clock::time_point endTCP;
 char* recvbuf;
 int iResult;
 int recvbuflen;
 ofstream myfile("TCP.csv", ios::out | ios::app);
 bool connectionActive = false;
 
+bool test(char* sendbuf) {
+	printf("Sending via TCP \"%s\"...\n", sendbuf);
+	int sum = 0;
+	startTCP = chrono::high_resolution_clock::now();
+	do {
+		iResult = send(TCP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
+		if (iResult == SOCKET_ERROR) {
+			printf("send failed with error: %d\n", WSAGetLastError());
+			free(recvbuf);
+			return false;
+		}
+		sum += iResult;
+		printf("Bytes Sent TCP: %ld\n", iResult);
+	} while (sum < strlen(sendbuf) + 1);
+	printf("Listening TCP...\n");
+	recvbuflen = (strlen(sendbuf) + 1);
+	recvbuf = (char*)malloc(recvbuflen * sizeof(char));
+	sum = 0;
+	do {
+		iResult = recv(TCP, *(&recvbuf + sum), recvbuflen - sum, 0);
+		if (iResult > 0) {
+			printf("Bytes received TCP: %d\n", iResult);
+			sum += iResult;
+		}
+		else if (iResult == 0) {
+			printf("Connection TCP closing...\n");
+			free(recvbuf);
+			return false;
+		}
+
+		else {
+			printf("recv TCP failed with error: %d\n", WSAGetLastError());
+			free(recvbuf);
+			return false;
+		}
+	} while (sum < strlen(sendbuf) + 1);
+	endTCP = chrono::high_resolution_clock::now();
+	long r = (endTCP - startTCP).count();
+	myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
+	printf("Received \"%s\". Time: %d\n", recvbuf, r);
+	free(recvbuf);
+	return true;
+}
 
 int __cdecl main(int argc, char** argv)
 {
@@ -71,9 +114,6 @@ int __cdecl main(int argc, char** argv)
 
 	struct addrinfo* ptr = NULL,
 		hintsTCP;
-
-
-	chrono::high_resolution_clock::time_point end;
 
 	/*// Validate the parameters
 	if (argc != 2) {
@@ -131,54 +171,30 @@ int __cdecl main(int argc, char** argv)
 
 	printf("Server connection established TCP\n");
 	connectionActive = true;
-	while (1) {
-		printf("Send a message: ");
-		string in;
-		getline(cin, in);
-		sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
-		memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
-		printf("Sending via TCP \"%s\"...\n", sendbuf);
-		int sum = 0;
-		startTCP = chrono::high_resolution_clock::now();
-		do {
-			iResult = send(TCP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
-			if (iResult == SOCKET_ERROR) {
-				printf("send failed with error: %d\n", WSAGetLastError());
-				cleanup(1);
-			}
-			sum += iResult;
-			printf("Bytes Sent TCP: %ld\n", iResult);
-		} while (sum < strlen(sendbuf) + 1);
-		printf("Listening TCP...\n");
-		recvbuflen = (strlen(sendbuf) + 1);
-		recvbuf = (char*)malloc(recvbuflen * sizeof(char));
-		sum = 0;
-		do {
-			iResult = recv(TCP, *(&recvbuf + sum), recvbuflen - sum, 0);
-			if (iResult > 0) {
-				printf("Bytes received TCP: %d\n", iResult);
-				sum += iResult;
-			}
-			else if (iResult == 0) {
-				printf("Connection TCP closing...\n");
-				cleanup();
-			}
+	printf("Enter max bytes to send (2^x bytes will be sent): x=");
+	int b;
+	cin >> b;
 
-			else {
-				printf("recv TCP failed with error: %d\n", WSAGetLastError());
-				cleanup(1);
+	printf("Enter number of iterations per byte: ");
+	int i;
+	cin >> i;
+
+	for (int ii = 0; ii < b; ii++) {
+		char* s = (char*)malloc(pow(2, ii));
+		for (int r = 0; r < i; r++) {
+			for (int c = 0; c < pow(2, ii); c++)
+				*(s + c) = (char)((rand() % 26) + 'a'); //fill up string with random chars from a to z
+			printf("Test %d: ", r + 1);
+			connectionActive = test(s);
+			if (!connectionActive) {
+				printf("Test failed on 2^%d, test %d.\n", ii, r);
+				break;
+				break;
+				break;
 			}
-		} while (sum < strlen(sendbuf) + 1);
-		end = chrono::high_resolution_clock::now();
-		long r = (end - startTCP).count();
-		myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
-		printf("Received \"%s\". Time: %d\n", recvbuf, r);
-		free(recvbuf);
-		free(sendbuf);
+		}
+		free(s);
 	}
-
-
-
 
 	// cleanup
 	cleanup(0);
@@ -211,8 +227,6 @@ int cleanup(int code) {
 		WSACleanup();
 
 		myfile.close();
-
-		if (sendbuf != NULL) free(sendbuf);
 
 		if (recvbuf != NULL) free(recvbuf);
 
