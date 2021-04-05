@@ -1,7 +1,1 @@
-﻿  TCPserver.cpp
-  Generating code
-  Previous IPDB was built with incompatible compiler, fall back to full compilation.
-C:\Users\herberac\source\repos\speedytestnet\TCPserver\TCPserver.cpp(228): warning C4715: 'cleanup': not all control paths return a value
-  All 185 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
-  Finished generating code
-  TCPserver.vcxproj -> C:\Users\herberac\source\repos\speedytestnet\x64\Release\TCPserver.exe
+﻿  TCPserver.vcxproj -> C:\Users\herberac\source\repos\speedytestnet\x64\Release\TCPserver.exe

@@ -191,6 +191,7 @@ int __cdecl main(int argc, char** argv)
         for (int r = 0; r < i; r++) {
             for (int c = 0; c < pow(2, ii); c++)
                 *(s+c) = (char)((rand() % 26) + 'a'); //fill up string with random chars from a to z
+            *(s + ((int)pow(2, ii)-1)) = '\0';
             printf("Test %d: ", r+1);
             connectionActive = test(s);
             if (!connectionActive) {
