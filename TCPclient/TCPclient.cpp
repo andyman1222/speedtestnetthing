@@ -17,6 +17,8 @@
 #include <chrono>
 #include <string>
 #include <signal.h>
+#include <thread>
+#include <csignal>
 
 
 // Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
@@ -39,14 +41,36 @@ string ADDR = "a.quantonium.net";
 WSADATA wsaData;
 SOCKET TCP = INVALID_SOCKET;
 struct addrinfo* resultTCP = NULL;
-chrono::high_resolution_clock::time_point startTCP;
 char* sendbuf;
-char* recvbuf;
+char recvbuf[1024];
 int iResult;
-int recvbuflen;
 ofstream myfile("TCP.csv", ios::out | ios::app);
 bool connectionActive = false;
 
+HANDLE listenThread;
+
+unsigned __stdcall listen(void* n) {
+	printf("Listening TCP...\n");
+	
+	do {
+		iResult = recv(TCP, recvbuf, 1024, 0);
+		if (iResult > 0) {
+			printf("Bytes received TCP: %d\n", iResult);
+		}
+		else if (iResult == 0) {
+			printf("Connection TCP closing...\n");
+			cleanup();
+		}
+
+		else {
+			printf("recv TCP failed with error: %d\n", WSAGetLastError());
+			cleanup(1);
+		}
+		printf("Received \"%s\".\n", recvbuf);
+	} while (connectionActive);
+	ExitThread(0);
+	
+}
 
 int __cdecl main(int argc, char** argv)
 {
@@ -72,8 +96,8 @@ int __cdecl main(int argc, char** argv)
 	struct addrinfo* ptr = NULL,
 		hintsTCP;
 
+	
 
-	chrono::high_resolution_clock::time_point end;
 
 	/*// Validate the parameters
 	if (argc != 2) {
@@ -131,15 +155,21 @@ int __cdecl main(int argc, char** argv)
 
 	printf("Server connection established TCP\n");
 	connectionActive = true;
+
+	listenThread = (HANDLE)_beginthreadex(NULL, 0, &listen, (void*)NULL, 0, NULL);
+
 	while (1) {
 		printf("Send a message: ");
 		string in;
 		getline(cin, in);
 		sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
 		memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
+		if (strcmp(sendbuf, ".") == 0) {
+			printf("Closing connection and shutting down...");
+			cleanup(0);
+		}
 		printf("Sending via TCP \"%s\"...\n", sendbuf);
 		int sum = 0;
-		startTCP = chrono::high_resolution_clock::now();
 		do {
 			iResult = send(TCP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
 			if (iResult == SOCKET_ERROR) {
@@ -149,31 +179,6 @@ int __cdecl main(int argc, char** argv)
 			sum += iResult;
 			printf("Bytes Sent TCP: %ld\n", iResult);
 		} while (sum < strlen(sendbuf) + 1);
-		printf("Listening TCP...\n");
-		recvbuflen = (strlen(sendbuf) + 1);
-		recvbuf = (char*)malloc(recvbuflen * sizeof(char));
-		sum = 0;
-		do {
-			iResult = recv(TCP, *(&recvbuf + sum), recvbuflen - sum, 0);
-			if (iResult > 0) {
-				printf("Bytes received TCP: %d\n", iResult);
-				sum += iResult;
-			}
-			else if (iResult == 0) {
-				printf("Connection TCP closing...\n");
-				cleanup();
-			}
-
-			else {
-				printf("recv TCP failed with error: %d\n", WSAGetLastError());
-				cleanup(1);
-			}
-		} while (sum < strlen(sendbuf) + 1);
-		end = chrono::high_resolution_clock::now();
-		long r = (end - startTCP).count();
-		myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
-		printf("Received \"%s\". Time: %d\n", recvbuf, r);
-		free(recvbuf);
 		free(sendbuf);
 	}
 

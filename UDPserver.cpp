@@ -63,6 +63,10 @@ int __cdecl main(int argc, char** argv)
     if (argc > 1) {
         UDPORT = argv[1];
     }
+    else {
+        printf("No port number.\n");
+        return 1;
+    }
 
     // Initialize Winsock
     iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -100,7 +104,7 @@ int __cdecl main(int argc, char** argv)
 
     freeaddrinfo(resultUDP);
 
-    printf("Listening for connections...\n");
+    printf("Note: UDP server will only act as echo server, as it does not keep track of client connects/disconnects.\n");
 
     //UDP doesn't have listen/accept, so simply take any data just received and send back to sender. No need to keep track of who's still connected.
     //Alright I could do keep-alive but I'll just let the client fail on server shutdown instead
@@ -119,6 +123,7 @@ int __cdecl main(int argc, char** argv)
             printf("Bytes UDP received: %d; message: \"%s\"; client: %s\n", iResult, recvbuf, addr);
 
             // Echo the buffer back to the sender
+            for (auto& c : recvbuf) c = toupper(c);
             iSendResult = sendto(ListenSocketUDP, recvbuf, iResult, 0, (SOCKADDR *)&si_other, slen);
             if (iSendResult == SOCKET_ERROR) {
                 printf("send UDP failed with error: %d\n", WSAGetLastError());

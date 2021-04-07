@@ -34,8 +34,8 @@ void _cleanup(int r) {
     cleanup(r);
 }
 
-string UDPORT = "27016";
-string ADDR = "a.quantonium.net";
+string UDPORT;
+string ADDR;
 
 WSADATA wsaData;
 SOCKET UDP = INVALID_SOCKET;
@@ -62,6 +62,14 @@ int __cdecl main(int argc, char** argv)
         if (argc > 2) {
             UDPORT = argv[2];
         }
+        else {
+            printf("No port number.\n");
+            return 1;
+        }
+    }
+    else {
+        printf("No address.\n");
+        return 1;
     }
 
     if (!myfile.is_open()) {
@@ -137,6 +145,10 @@ int __cdecl main(int argc, char** argv)
         getline(cin, in);
         sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
         memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
+        if (strcmp(sendbuf, ".") == 0) {
+            printf("Closing connection and shutting down...");
+            cleanup(0);
+        }
         printf("Sending via UDP \"%s\"...\n", sendbuf);
         int sum = 0;
             
@@ -150,7 +162,7 @@ int __cdecl main(int argc, char** argv)
             sum += iResult;
             printf("Bytes Sent UDP: %ld\n", iResult);
         } while (sum < strlen(sendbuf) + 1);
-        printf("Listening UDP...\n");
+        printf("Listening UDP... (NOTE: If size is too large, message will be lost. I have no intention of fixing it, as it's only an issue with UDP.)\n");
         recvbuflen = (strlen(sendbuf) + 1);
         recvbuf = (char*)malloc(recvbuflen * sizeof(char));
         sum = 0;
@@ -159,7 +171,7 @@ int __cdecl main(int argc, char** argv)
             if (iResult > 0) {
                     
                 printf("Bytes received UDP: %d\n", iResult);
-                    
+                sum += iResult;
             }
 
             else if (iResult == 0) {

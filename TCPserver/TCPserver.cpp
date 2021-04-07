@@ -17,6 +17,7 @@
 #include <string>
 #include <list>
 #include <signal.h>
+#include <iostream>
 
 // Need to link with Ws2_32.lib
 #pragma comment (lib, "Ws2_32.lib")
@@ -39,6 +40,8 @@ int iResult;
 std::list<HANDLE> con;
 std::list<SOCKET> socks;
 
+HANDLE listenThread;
+
 int cleanup(int r);
 void cleanup();
 void _cleanup(int r) {
@@ -47,6 +50,10 @@ void _cleanup(int r) {
 }
 
 bool keepActive = true;
+
+sockaddr_in clientInfo;
+int Csize = sizeof(clientInfo);
+char addr[INET_ADDRSTRLEN];
 
 unsigned __stdcall ClientSession(void* data) {
     char recvbuf[DEFAULT_BUFLEN];
@@ -70,6 +77,7 @@ unsigned __stdcall ClientSession(void* data) {
             printf("Bytes TCP received: %d; message: \"%s\"; client: %s\n", iResult_, recvbuf, addr);
 
             // Echo the buffer back to the sender
+            for (auto& c : recvbuf) c = toupper(c);
             iSendResult = send(*ClientSocket, recvbuf, iResult_, 0);
             if (iSendResult == SOCKET_ERROR) {
                 printf("send TCP failed with error: %d\n", WSAGetLastError());
@@ -98,6 +106,22 @@ unsigned __stdcall ClientSession(void* data) {
         printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
     }
     printf("Connection with %s terminated successfully.", addr);
+    ExitThread(0);
+}
+
+unsigned __stdcall handleConnects(void* v) {
+    // Accept a client socket
+    while (keepActive) {
+        ClientSocketTCP = accept(ListenSocketTCP, (struct sockaddr*)&clientInfo, &Csize);
+        inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
+        if (ClientSocketTCP == INVALID_SOCKET) {
+            printf("accept TCP failed with error: %d\n", WSAGetLastError());
+        }
+        else {
+            //printf("Client connected: %s\n", addr);
+            con.push_back((HANDLE)_beginthreadex(NULL, 0, &ClientSession, (void*)ClientSocketTCP, 0, NULL));
+        }
+    }
     ExitThread(0);
 }
 
@@ -155,28 +179,50 @@ int __cdecl main(int argc, char** argv)
         cleanup(1);
     }
 
-    sockaddr_in clientInfo;
-    int size = sizeof(clientInfo);
-    char addr[INET_ADDRSTRLEN];
-    getsockname(ListenSocketTCP, (struct sockaddr*)&clientInfo, &size);
+    printf("Type messages on server to send to all clients.\n");
+
+    
+    getsockname(ListenSocketTCP, (struct sockaddr*)&clientInfo, &Csize);
     inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
     printf("Listening for connections on %s:%s...\n", addr, TCPORT.c_str());
     
-    
-    
-    
-    // Accept a client socket
-    while(keepActive){
-        ClientSocketTCP = accept(ListenSocketTCP, (struct sockaddr*)&clientInfo, &size);
-        inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
-        if (ClientSocketTCP == INVALID_SOCKET) {
-            printf("accept TCP failed with error: %d\n", WSAGetLastError());
-        }
-        else {
-            //printf("Client connected: %s\n", addr);
-            con.push_back((HANDLE)_beginthreadex(NULL, 0, &ClientSession, (void*)ClientSocketTCP, 0, NULL));
-        }
+    listenThread = (HANDLE)_beginthreadex(NULL, 0, &handleConnects, (void*)NULL, 0, NULL);
+
+    while (keepActive) {
+        printf("Enter a message: ");
+        string in;
         
+        getline(cin, in);
+        char* sendbuf = (char*)malloc(strlen(in.c_str()) + 1);
+        memcpy(sendbuf, in.c_str(), strlen(in.c_str()) + 1);
+        if (strcmp(sendbuf, ".") == 0) {
+            printf("Closing connection and shutting down...");
+            cleanup(0);
+        }
+        printf("Sending via TCP \"%s\" to all clients...\n", sendbuf);
+        
+        for(SOCKET TCP : socks){
+            if(TCP != INVALID_SOCKET){
+                int sum = 0;
+                do {
+                    iResult = send(TCP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
+                    if (iResult == SOCKET_ERROR) {
+                        printf("send failed with error: %d\n", WSAGetLastError());
+                        if (WSAGetLastError() == 10058) { //shutdown
+                            printf("Client shutdown; removing dead socket.\n");
+                            socks.remove(TCP);
+                            break;
+                        } else cleanup(1);
+                    }
+                    else {
+                        sum += iResult;
+                        printf("Bytes Sent TCP: %ld\n", iResult);
+                    }
+                } while (sum < strlen(sendbuf) + 1);
+            }
+            else socks.remove(TCP);
+        }
+        free(sendbuf);
     }
 
     // cleanup
@@ -194,6 +240,8 @@ int cleanup(int code) {
         // shutdown the connection since no more data will be sent
         printf("Cleaning up... (Error messages may occur as sockets DC)\n");
         keepActive = false;
+
+        if(listenThread != NULL) WaitForSingleObject(listenThread, 1000);
 
         if (ListenSocketTCP != INVALID_SOCKET) {
 
@@ -216,6 +264,8 @@ int cleanup(int code) {
             if (!CloseHandle(h))
                 printf("Thread termination failed. Error: %d", GetLastError());
         }
+
+
 
         if (resultTCP != NULL)
             freeaddrinfo(resultTCP);
