@@ -1,7 +1,35 @@
 ﻿  TCPserver.cpp
-  Generating code
-  1 of 6 functions (16.7%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    1 functions had inline decision re-evaluated but remain unchanged
-  Finished generating code
-  TCPserver.vcxproj -> B:\Documents\GitHub\speedtestnetthing\x64\Release\TCPserver.exe
+  The contents of <filesystem> are available only with C++17 or later.
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(40,5): error C2084: function 'int getIndexSize(long)' already has a body
+Y:\332 projecto\speedtestnetthing\common.h(40): message : see previous definition of 'getIndexSize'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(103,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(117,41): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(126,35): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(126,54): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(126,54): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(130,29): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(130,48): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(130,48): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(149,66): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(161,34): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(161,53): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(161,53): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(163,74): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(200,67): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(208,42): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(217,36): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(217,55): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(217,55): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(221,30): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(221,49): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(221,49): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(274,45): warning C4267: 'initializing': conversion from 'size_t' to 'long', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(284,35): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(284,54): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(284,54): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(291,42): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(291,61): error C2568: '+': unable to resolve function overload
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(291,61): message : could be 'int getIndexSize(long)'
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(291,75): error C2065: 'getIndexSize': undeclared identifier
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(300,71): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(317,64): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data

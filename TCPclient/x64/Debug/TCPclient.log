@@ -1,0 +1,15 @@
+﻿  TCPclient.cpp
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(119,41): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(122,12): warning C4018: '<': signed/unsigned mismatch
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(145,49): warning C4311: 'type cast': pointer truncation from 'char *' to 'unsigned long'
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(145,49): warning C4302: 'type cast': truncation from 'char *' to 'unsigned long'
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(170,58): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(184,42): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(187,13): warning C4018: '<': signed/unsigned mismatch
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(265,64): warning C4311: 'type cast': pointer truncation from 'char *' to 'unsigned long'
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(265,64): warning C4302: 'type cast': truncation from 'char *' to 'unsigned long'
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(282,54): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(437,59): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(464,61): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPclient\TCPclient.cpp(545): warning C4715: 'cleanup': not all control paths return a value
+  TCPclient.vcxproj -> Y:\332 projecto\speedtestnetthing\x64\Debug\TCPclient.exe
