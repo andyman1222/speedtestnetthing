@@ -139,7 +139,8 @@ bool requestNewSize(struct filehandler* h, long long proposedFbufSize, long long
 				long long diff = h->fbuflen - n;
 				h->fbuflen = n;
 				proposedBufOther -= diff;
-				if (h->fbuflen == 0) {
+				if (h->fbuflen <= 1) {
+					printf("Allocated space for file buffer too small, unable to allocate.");
 					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
 					if (abortOnFail) cleanupFileHandler(h);
 					return false;
@@ -157,7 +158,8 @@ bool requestNewSize(struct filehandler* h, long long proposedFbufSize, long long
 				long long diff = h->fbuflen - n;
 				h->fbuflen = n;
 				proposedBufOther -= diff;
-				if (h->fbuflen <= 0 || *bufreflen <= 0) {
+				if (h->fbuflen <= 1 || *bufreflen <= 1) {
+					printf("Allocated space for file or send/recv buffer too small, unable to allocate.");
 					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
 					if (abortOnFail) cleanupFileHandler(h);
 					return false;
@@ -203,6 +205,7 @@ void initFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipient,
 				}
 				h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
 				printf("Initial bytes TCP sent: %d; index: %ld; %s: %s\n", h->sendbuflen, h->index, recipient, addr);
+				h->index++;
 			}
 		}
 		else {
@@ -316,6 +319,7 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 						}
 						h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
 						printf("Bytes TCP sent: %d; index: %ld; %s: %s\n", h->sendbuflen, h->index, recipient, addr);
+						h->index++;
 					}
 					else {
 						printf("Done writing to %s %s.\n", recipient, addr);
@@ -391,6 +395,7 @@ void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipie
 				sprintf(h->sendbuf, "%ld", h->fbuflen); //send back the length of the data retrieved to be written to the file
 				h->iSendResult = send(*sockptr, h->sendbuf, strlen(h->sendbuf) + 1, 0);
 				printf("Size sent: %s; %s: %s\n", h->sendbuf, recipient, addr);
+				h->index++;
 			}
 		}
 	}

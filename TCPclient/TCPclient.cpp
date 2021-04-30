@@ -69,7 +69,6 @@ unsigned __stdcall listen(void* n) {
 							handleFileRead(&h, &TCP, "server", ADDR.c_str());
 							break;
 						}
-						h.index++;
 					}
 					if (h.status == 0) lis = false;
 

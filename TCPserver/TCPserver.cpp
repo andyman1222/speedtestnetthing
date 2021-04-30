@@ -88,7 +88,7 @@ unsigned __stdcall ClientSession(void* data) {
 				}
 				break;
 			}
-			h.index++;
+			
 			free(cmd);
 		}
 		else if (iResult_ == 0) {
