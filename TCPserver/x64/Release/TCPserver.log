@@ -16,23 +16,23 @@ Y:\332 projecto\speedtestnetthing\common.c(264,11): warning C4477: 'printf' : fo
 Y:\332 projecto\speedtestnetthing\common.c(264,11): message : consider using '%lld' in the format string
 Y:\332 projecto\speedtestnetthing\common.c(264,11): message : consider using '%Id' in the format string
 Y:\332 projecto\speedtestnetthing\common.c(264,11): message : consider using '%I64d' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(287,20): warning C4244: 'argument': conversion from '__int64' to 'long', possible loss of data
-Y:\332 projecto\speedtestnetthing\common.c(301,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\common.c(320,52): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\common.c(321,14): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type '__int64'
-Y:\332 projecto\speedtestnetthing\common.c(321,14): message : consider using '%lld' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(321,14): message : consider using '%Id' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(321,14): message : consider using '%I64d' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(395,25): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
-Y:\332 projecto\speedtestnetthing\common.c(395,25): message : consider using '%lld' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(395,25): message : consider using '%Id' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(395,25): message : consider using '%I64d' in the format string
-Y:\332 projecto\speedtestnetthing\common.c(396,74): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(288,20): warning C4244: 'argument': conversion from '__int64' to 'long', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(302,62): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(321,52): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(322,14): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type '__int64'
+Y:\332 projecto\speedtestnetthing\common.c(322,14): message : consider using '%lld' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(322,14): message : consider using '%Id' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(322,14): message : consider using '%I64d' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(396,25): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type '__int64'
+Y:\332 projecto\speedtestnetthing\common.c(396,25): message : consider using '%lld' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(396,25): message : consider using '%Id' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(396,25): message : consider using '%I64d' in the format string
+Y:\332 projecto\speedtestnetthing\common.c(397,74): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
 Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(59,49): warning C4244: 'argument': conversion from '__int64' to 'int', possible loss of data
 Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(105,64): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
   Generating code
-  10 of 267 functions ( 3.7%) were compiled, the rest were copied from previous compilation.
+  2 of 267 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    6 functions had inline decision re-evaluated but remain unchanged
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   TCPserver.vcxproj -> Y:\332 projecto\speedtestnetthing\x64\Release\TCPserver.exe

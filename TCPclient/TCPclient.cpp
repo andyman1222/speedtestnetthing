@@ -89,7 +89,7 @@ unsigned __stdcall listen(void* n) {
 			}
 
 			else {
-				printf("recv TCP failed with error: %d (Note: Client could've disconnected)\n", WSAGetLastError());
+				printf("recv TCP failed with error: %d (server probably crashed)\n", WSAGetLastError());
 				cleanupFileHandler(&h);
 				cleanup(1);
 

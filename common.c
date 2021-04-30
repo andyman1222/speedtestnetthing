@@ -140,7 +140,7 @@ bool requestNewSize(struct filehandler* h, long long proposedFbufSize, long long
 				h->fbuflen = n;
 				proposedBufOther -= diff;
 				if (h->fbuflen <= 1) {
-					printf("Allocated space for file buffer too small, unable to allocate.");
+					printf("Allocated space for file buffer too small, unable to allocate.\n");
 					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
 					if (abortOnFail) cleanupFileHandler(h);
 					return false;
@@ -159,7 +159,7 @@ bool requestNewSize(struct filehandler* h, long long proposedFbufSize, long long
 				h->fbuflen = n;
 				proposedBufOther -= diff;
 				if (h->fbuflen <= 1 || *bufreflen <= 1) {
-					printf("Allocated space for file or send/recv buffer too small, unable to allocate.");
+					printf("Allocated space for file or send/recv buffer too small, unable to allocate.\n");
 					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
 					if (abortOnFail) cleanupFileHandler(h);
 					return false;
@@ -262,6 +262,7 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 			}
 			h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
 			printf("Initial bytes TCP sent: %d; index: %ld;\n", h->sendbuflen, h->index);
+			h->index++;
 			if (h->canEnd && end) {
 				h->finishNextLoop = true;
 			}
@@ -368,7 +369,7 @@ void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipie
 			long long l = iResult_ - (strlen(cmd) + 1);
 			long long m = h->recvbuflen;
 			bool updateBufs = false;
-			if (ind + 1 == h->index) { //next set of data
+			if (ind == h->index) { //next set of data
 				if (ind > 1) {
 					fwrite(h->fbuf, 1, h->fbuflen, h->f);
 					int tmp = fflush(h->f);
@@ -379,14 +380,14 @@ void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipie
 				}
 				else if (!h->foundMax) {
 					updateBufs = true;
-					m = (l * 2) + 1 + getIndexSize(h->index);
+					m = (l * 2) + 1 + getIndexSize(h->index+1);
 				}
 			}
 			else { //data loss, or something else mysterious
 				h->dataDropped = true;
 				updateBufs = true;
 				h->index--;
-				m = ((h->recvbuflen - (1 + getIndexSize(h->index))) / 2) + 1 + getIndexSize(h->index);
+				m = iResult_;
 			}
 			if (requestNewSize(h, l, m, 2, false, sockptr)) {
 				for (long long j = 0; j < h->fbuflen; j++) {
