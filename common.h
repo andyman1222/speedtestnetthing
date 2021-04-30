@@ -17,7 +17,7 @@
 #include <chrono>
 
 #pragma comment (lib, "Ws2_32.lib")
-#define DEFAULT_BUFLEN 32
+#define DEFAULT_BUFLEN 512
 WSADATA wsaData;
 
 int iResult;
