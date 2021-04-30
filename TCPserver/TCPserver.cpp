@@ -20,10 +20,9 @@ struct addrinfo hintsTCP;
 
 std::list<HANDLE> con;
 std::list<SOCKET> socks;
+std::list<filehandler> handlers;
 
 HANDLE listenThread;
-
-
 
 int cleanup(int r);
 void cleanup();
@@ -36,29 +35,16 @@ char addr[INET_ADDRSTRLEN];
 
 unsigned __stdcall ClientSession(void* data) {
 	socks.push_back((SOCKET)data);
-	SOCKET* ClientSocket = &socks.back();
-	long recvbuflen = DEFAULT_BUFLEN;
-	long sendbuflen = DEFAULT_BUFLEN;
-	long fbuflen = DEFAULT_BUFLEN;
-	char* sendbuf = (char*)calloc(sendbuflen, 1);
-	char* fbuf = (char*)calloc(fbuflen, 1);
-	char* recvbuf = (char*)calloc(recvbuflen, 1);
-	long index = 1; //biiiiiiiiiiiiig files
-	int iSendResult = 0;
-	int status = 0;
-	int sendrecv = 0; //0 for send, 1 for recv
-	bool foundMax = false;
-	bool dataDropped = false;
-	bool finishNextLoop = false , canEnd;
-	bool keepLooping = true;
-	FILE* f = NULL;
+	SOCKET ClientSocket = socks.back();
+	struct filehandler h;
 	sockaddr_in clientInfo;
 	int size = sizeof(clientInfo);
-	getpeername(*ClientSocket, (struct sockaddr*)&clientInfo, &size);
+	getpeername(ClientSocket, (struct sockaddr*)&clientInfo, &size);
 	char addr[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
 	printf("Client connected: %s\n", addr);
-	string path;
+	resetFileHandler(&h);
+	
 	do {
 		//SENDING PROTOCOL: Connection established via TCP; client requests to send or receive file;
 		//sender will send chunk number, followed by chunk data;
@@ -70,270 +56,64 @@ unsigned __stdcall ClientSession(void* data) {
 		//if size is negative, error occurred
 
 		//Technically this protocol is not necessary for TCP, and will work well for UDP, but this is how I implement it
-		int iResult_ = recv(*ClientSocket, recvbuf, recvbuflen, 0);
+		int iResult_ = recv(ClientSocket, h.recvbuf, h.recvbuflen, 0);
 		if (iResult_ > 0) {
 			string cmdstr;
 			char* cmd;
-			getCmd(&cmd, recvbuf);
-			cmdstr = string(recvbuf);
-			long s = strtol(recvbuf, NULL, 10);
-			switch (status) {
+			getCmd(&cmd, h.recvbuf);
+			cmdstr = string(h.recvbuf);
+			
+			switch (h.status) {
 			case 0: //command- "iWant/uTake [filepath/filename]" as a string
-				recvbuf[iResult_] = '\0';
-				printf("%s\n", recvbuf);
-				path = cmdstr.substr(strlen(cmd) + 1, iResult_ - (strlen(cmd) + 1));
-				if (strcmp(cmd, "iWant") == 0) {
-					f = fopen(path.c_str(), "rb");
-					if (!f) {
-						printf("What you talkin bout Willis?  I aint seen that file nowhere! %s\n", path.c_str());
-						printf("Cannot open file %s\n", path.c_str());
-						iSendResult = send(*ClientSocket, "-2", strlen("-2") + 1, 0); //no file
+				
+				h.recvbuf[iResult_] = '\0';
+				if(iResult_ > strlen(cmd)+1){
+					h.path = cmdstr.substr(strlen(cmd) + 1, iResult_ - (strlen(cmd) + 1));
+					if (strcmp(cmd, "iWant") == 0) {
+						initFileRead(&h, &ClientSocket, "client", addr);
 					}
-					else {
-						index = 1;
-						status = 1;
-						sendrecv = 0;
-						foundMax = false;
-						dataDropped = false;
-						finishNextLoop = false;
-						fbuflen = DEFAULT_BUFLEN;
-						recvbuflen = DEFAULT_BUFLEN;
-						sendbuflen = DEFAULT_BUFLEN;
-						fbuf = (char*)realloc(fbuf, fbuflen);
-						rewind(f);
-						int n = fread(fbuf, 1, fbuflen, f);
-						fflush(f);
-						bool end = false;
-						if (n < fbuflen) {
-
-							fbuflen = n;
-							end = true;
-						}
-						if (fbuflen != 0) {
-							sendbuflen = fbuflen + 1 + getIndexSize(index);
-							sendbuf = (char*)realloc(sendbuf, sendbuflen); //account for ulong, a space, fbuf
-							sprintf(sendbuf, "%ld ", index);
-							for (int j = 0; j < fbuflen; j++) {
-								*(sendbuf + j + 1 + getIndexSize(index)) = *(fbuf + j);
-							}
-							iSendResult = send(*ClientSocket, sendbuf, sendbuflen, 0);
-							printf("Initial bytes TCP sent: %d; index: %ld; client: %s\n", sendbuflen, index, addr);
-						}
-						else {
-							printf("Done writing to client %s.\n", addr);
-							iSendResult = send(*ClientSocket, "Done ", sizeof("Done ") + 1, 0);
-							fclose(f);
-							recvbuflen = DEFAULT_BUFLEN;
-							recvbuf = (char*)realloc(recvbuf, recvbuflen);
-							status = 0;
-						}
+					else if (strcmp(cmd, "uTake") == 0) {
+						initFileWrite(&h, &ClientSocket, "client", addr);
 					}
-				}
-				else if (strcmp(cmd, "uTake") == 0) {
-					f = fopen(path.c_str(), "wb");
-					if (!f) {
-						printf("Cannot create file %s\n", path.c_str());
-						iSendResult = send(*ClientSocket, "-2", strlen("-2") + 1, 0); //file creation fail
-					}
-					else {
-						index = 1;
-						status = 1;
-						sendrecv = 1;
-						foundMax = false;
-						dataDropped = false;
-						finishNextLoop = false;
-						fbuflen = DEFAULT_BUFLEN;
-						sendbuflen = DEFAULT_BUFLEN;
-						fbuf = (char*)realloc(fbuf, fbuflen);
-						recvbuflen = fbuflen + 1 + getIndexSize(index);
-						recvbuf = (char*)realloc(recvbuf, recvbuflen); //account for ulong, a space, fbuf
-						iSendResult = send(*ClientSocket, "ready ", strlen("ready ") + 1, 0);
-						printf("Starting file retrieval with client: %s\n", addr);
-					}
-
 				}
 				break;
 			case 1: //send/recv file- "[number] [data]" as a packet
-				switch (sendrecv) {
+				switch (h.sendrecv) {
 				case 0: //received packet: size of data received (client is receiving)
-
-					if (s < 0) { //something went wrong
-						printf("Client %s error code %ld\n", addr, s);
-						fclose(f);
-						remove(path.c_str());
-						status = 0;
-						recvbuflen = DEFAULT_BUFLEN;
-						recvbuf = (char*)realloc(recvbuf, recvbuflen);
-						status = 0;
-					}
-					else {
-						canEnd = true;
-						printf("Client replied with size %ld.\n", s);
-						if (s < fbuflen) { //data lost- reduce buffer size
-							index--;
-							fseek(f, -1 * fbuflen, SEEK_CUR);
-							fbuflen /= 2;
-							dataDropped = true;
-							canEnd = false;
-
-						}
-						else if (dataDropped) { //data was previously lost, but not this time- max buffer size found
-							foundMax = true;
-						}
-						else if (!foundMax) { //no data lost yet, attempt to increase buffer size
-							fbuflen *= 2;
-						}
-						if (fbuflen == 0) { //too much data has been lost, terminate transfer
-							iSendResult = send(*ClientSocket, "-4", strlen("-4") + 1, 0);
-							fclose(f);
-							recvbuflen = DEFAULT_BUFLEN;
-							recvbuf = (char*)realloc(recvbuf, recvbuflen);
-							status = 0;
-						}
-						else if (!finishNextLoop) {
-							fbuf = (char*)realloc(fbuf, fbuflen);
-							int n = fread(fbuf, 1, fbuflen, f);
-							fflush(f);
-							bool end = false;
-							if (n < fbuflen) {
-
-								fbuflen = n;
-								end = true;
-							}
-							if (fbuflen != 0) {
-								sendbuflen = fbuflen + 1 + getIndexSize(index);
-								sendbuf = (char*)realloc(sendbuf, sendbuflen);
-								sprintf(sendbuf, "%ld ", index);
-								for (int j = 0; j < fbuflen; j++) {
-									*(sendbuf + j + 1 + getIndexSize(index)) = *(fbuf + j);
-								}
-								iSendResult = send(*ClientSocket, sendbuf, sendbuflen, 0);
-								printf("Bytes TCP sent: %d; index: %ld; client: %s\n", sendbuflen, index, addr);
-							}
-							else {
-								printf("Done writing to client %s.\n", addr);
-								iSendResult = send(*ClientSocket, "Done ", sizeof("Done ") + 1, 0);
-								fclose(f);
-								recvbuflen = DEFAULT_BUFLEN;
-								recvbuf = (char*)realloc(recvbuf, recvbuflen);
-								status = 0;
-							}
-							if (canEnd && end) {
-								finishNextLoop = true;
-							}
-						}
-						else {
-							printf("Done writing to client %s.\n", addr);
-							iSendResult = send(*ClientSocket, "Done ", sizeof("Done ") + 1, 0);
-							fclose(f);
-							recvbuflen = DEFAULT_BUFLEN;
-							recvbuf = (char*)realloc(recvbuf, recvbuflen);
-							status = 0;
-						}
-					}
+					handleFileRead(&h, &ClientSocket, "client", addr);
 					break;
 				case 1: //client sending
-					if (strcmp(cmd, "Done") == 0) { //All doen!!!!1!11!1
-						printf("Done receiving from client %s.\n", addr);
-						fwrite(fbuf, 1, fbuflen, f);
-						fflush(f);
-						fclose(f);
-						recvbuflen = DEFAULT_BUFLEN;
-						recvbuf = (char*)realloc(recvbuf, recvbuflen);
-						status = 0;
-					}
-					else {
-						long ind = strtol(cmd, NULL, 10);
-						if (ind < 0) { //something went wrong
-							printf("Client %s error code %ld\n", addr, ind);
-							fclose(f);
-							remove(path.c_str());
-							status = 0;
-							recvbuflen = DEFAULT_BUFLEN;
-							recvbuf = (char*)realloc(recvbuf, recvbuflen);
-							status = 0;
-						}
-						else if (ind == 0) { //index received was 0. Just skipping these, for some reason extra indexes get sent or something so yeah
-							printf("Index received was 0, skipping rogue packet\n");
-						}
-						else {
-							printf("Received index from client %s: %ld; size: %d;\n", addr, ind, iResult_);
-							long l = iResult_ - (strlen(cmd) + 1);
-							if (ind+1 == index) { //next set of data
-								if (ind > 1) {
-									fwrite(fbuf, 1, fbuflen, f);
-									fflush(f);
-								}
-								if (dataDropped) {
-									foundMax = true;
-								}
-								else if (!foundMax) {
-									recvbuflen = (l*2) + 1 + getIndexSize(index);
-									recvbuf = (char*)realloc(recvbuf, recvbuflen);
-								}
-							}
-							else { //data loss, or something else mysterious
-								dataDropped = true;
-								index--;
-								recvbuflen = ((recvbuflen - (1 + getIndexSize(index))) / 2) + 1 + getIndexSize(index);
-								recvbuf = (char*)realloc(recvbuf, recvbuflen);
-							}
-							fbuflen = l;
-							fbuf = (char*)realloc(fbuf, fbuflen);
-							for (int j = 0; j < fbuflen; j++) {
-								*(fbuf + j) = *(recvbuf + j + (strlen(cmd) + 1));
-							}
-							sprintf(sendbuf, "%ld", fbuflen); //send back the length of the data retrieved to be written to the file
-							iSendResult = send(*ClientSocket, sendbuf, strlen(sendbuf)+1, 0);
-							printf("Size sent: %s; client: %s\n", sendbuf, addr);
-						}
-					}
+					handleFileWrite(&h, &ClientSocket, "client", addr, iResult_);
 					break;
 				}
 				break;
 			}
-			index++;
+			h.index++;
 			free(cmd);
-
-
-			// Echo the buffer back to the sender
-			//for (auto& c : recvbuf) c = toupper(c);
-			//iSendResult = send(*ClientSocket, recvbuf, iResult_, 0);
-			if (iSendResult == SOCKET_ERROR) {
-				printf("send TCP failed with error: %d\n", WSAGetLastError());
-				iSendResult = send(*ClientSocket, "-1", strlen("-1") + 1, 0); //general error
-				if (f) fclose(f);
-			}
-			//printf("Bytes TCP sent: %d; message: \"%s\"; client: %s\n", iResult_, recvbuf, addr);
-			//do {
-				//if (listenUDP) {
-
 		}
 		else if (iResult_ == 0) {
 			printf("Connection TCP closing...\n");
-			if (f) fclose(f);
-			keepLooping = false;
-
+			cleanupFileHandler(&h);
 		}
 
 		else {
 			printf("recv TCP failed with error: %d (Note: Client could've disconnected their end)\n", WSAGetLastError());
-			if (f) fclose(f);
-			keepLooping = false;
-
+			cleanupFileHandler(&h);
 		}
-
-	} while (keepLooping && keepActive);
+		if (h.iSendResult == SOCKET_ERROR) {
+			printf("send TCP failed with error: %d\n", WSAGetLastError());
+			h.iSendResult = send(ClientSocket, "-1", strlen("-1") + 1, 0); //general error
+			cleanupFileHandler(&h);
+		}
+	} while (h.keepLooping && keepActive);
 
 	//close connection
-	int iResult_ = shutdown(*ClientSocket, SD_SEND);
+	int iResult_ = shutdown(ClientSocket, SD_SEND);
 	if (iResult_ == SOCKET_ERROR) {
 		printf("shutdown TCP failed with error: %d\n", WSAGetLastError());
 	}
 	printf("Connection with %s terminated successfully.", addr);
-	free(fbuf);
-	free(recvbuf);
-	free(sendbuf);
+	cleanupFileHandler(&h);
 	ExitThread(0);
 }
 
@@ -409,7 +189,7 @@ int __cdecl main(int argc, char** argv)
 	inet_ntop(AF_INET, &clientInfo.sin_addr, addr, sizeof(addr));
 	printf("Listening for connections on %s:%s...\n", addr, TCPORT.c_str());
 
-	listenThread = (HANDLE)_beginthreadex(NULL, 0, &handleConnects, (void*)NULL, 0, NULL);
+	listenThread = (HANDLE)_beginthreadex(NULL, 0, handleConnects, (void*)NULL, 0, NULL);
 
 	while (keepActive) {
 		printf("Enter 'exit' to exit: ");

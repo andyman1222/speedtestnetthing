@@ -17,11 +17,10 @@
 #include <chrono>
 
 #pragma comment (lib, "Ws2_32.lib")
-#define DEFAULT_BUFLEN 128
+#define DEFAULT_BUFLEN 32
 WSADATA wsaData;
 
 int iResult;
-string TCPORT = "27015";
 
 #include "common.c"
 #endif

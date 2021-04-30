@@ -1,16 +1,13 @@
 ﻿  TCPserver.cpp
   The contents of <filesystem> are available only with C++17 or later.
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(126,82): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(142,60): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(145,31): warning C4018: '<': signed/unsigned mismatch
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(174,84): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(192,90): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(213,31): warning C4018: '<': signed/unsigned mismatch
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(224,92): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(238,60): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(241,31): warning C4018: '<': signed/unsigned mismatch
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(317,89): warning C4311: 'type cast': pointer truncation from 'char *' to 'unsigned long'
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(317,89): warning C4302: 'type cast': truncation from 'char *' to 'unsigned long'
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(337,76): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(541): warning C4715: 'cleanup': not all control paths return a value
+Y:\332 projecto\speedtestnetthing\common.c(101,60): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(108,46): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(138,60): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(146,68): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(180,61): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(185,47): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(243,41): warning C4267: 'initializing': conversion from 'size_t' to 'long', possible loss of data
+Y:\332 projecto\speedtestnetthing\common.c(269,73): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(102,65): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+Y:\332 projecto\speedtestnetthing\TCPserver\TCPserver.cpp(280): warning C4715: 'cleanup': not all control paths return a value
   TCPserver.vcxproj -> Y:\332 projecto\speedtestnetthing\x64\Debug\TCPserver.exe
