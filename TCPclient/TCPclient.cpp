@@ -45,12 +45,12 @@ unsigned __stdcall listen(void* n) {
 
 		//Technically this protocol is not necessary for TCP, and will work well for UDP, but this is how I implement it
 		if (lis) {
-			int iResult_ = recv(TCP, h.recvbuf, h.recvbuflen, 0);
+			int iResult_ = recv(TCP, h.buf, h.buflen, 0);
 			if (iResult_ > 0) {
 				if (!handle) {
 					handle = true;
 					char* cmd;
-					getCmd(&cmd, h.recvbuf);
+					getCmd(&cmd, h.buf);
 					cmdstr = string(cmd);
 
 					string cmdstr;
@@ -204,19 +204,28 @@ int __cdecl main(int argc, char** argv)
 					resetFileHandler(&h);
 				}
 				else {
-					h.recvbuflen = h.fbuflen + 1 + getIndexSize(h.index);
-					h.recvbuf = (char*)realloc(h.recvbuf, h.recvbuflen); //account for ulong, a space, fbuf
-					if (!h.recvbuf) {
+					h.buflen = DEFAULT_BUFLEN + 1 + getIndexSize(h.index);
+					h.buf = (char*)realloc(h.buf, h.buflen); //account for ulong, a space, fbuf
+					if (!h.buf) {
 						printf("Unable to allocate receiving buffer memory, aborting.");
 						cleanupFileHandler(&h);
 						cleanup(1);
 					}
 					else {
-						sprintf(h.sendbuf, "iWant %s\0", h.path.c_str());
-						h.iSendResult = send(TCP, h.sendbuf, strlen(h.sendbuf) + 1, 0);
-						printf("Requested file: %s\n", h.sendbuf);
-						h.index++;
-						lis = true;
+						h.tempbuflen = DEFAULT_BUFLEN;
+						if (h.tempbuf) h.tempbuf = (char*)realloc(h.tempbuf, h.tempbuflen);
+						else h.tempbuf = (char*)calloc(h.tempbuflen, 1);
+						if (!h.tempbuf) {
+							printf("Unable to allocate receiving buffer memory, aborting.");
+							cleanupFileHandler(&h);
+						}
+						else {
+							sprintf(h.buf, "iWant %s\0", h.path.c_str());
+							h.iSendResult = send(TCP, h.buf, strlen(h.buf) + 1, 0);
+							printf("Requested file: %s\n", h.buf);
+							h.index++;
+							lis = true;
+						}
 					}
 				}
 			}
@@ -230,36 +239,16 @@ int __cdecl main(int argc, char** argv)
 				}
 				else {
 					rewind(h.f);
-					sprintf(h.sendbuf, "uTake %s\0", h.path.c_str());
-					h.iSendResult = send(TCP, h.sendbuf, strlen(h.sendbuf) + 1, 0);
+					fseek(h.f, 0L, SEEK_END);
+					h.fRemaining = ftell(h.f);
+					rewind(h.f);
+					sprintf(h.buf, "uTake %s\0", h.path.c_str());
+					h.iSendResult = send(TCP, h.buf, strlen(h.buf) + 1, 0);
 					printf("Starting file sending with server\n");
-					printf("Init sending file: %s\n", h.sendbuf);
+					printf("Init sending file: %s\n", h.buf);
 					lis = true;
 				}
 
-			}
-			else if (strcmp(cmd, "test") == 0) { //TO TEST HETE SUTEWIOKURLKSEJ STUPID FILESYSTEM
-				printf("Opening and reading file %s...\n", h.path.c_str());
-				h.f = fopen(h.path.c_str(), "rb");
-				if (h.f) {
-					char* k = (char*)malloc(sizeof(char));
-					int i = 1;
-					while (!feof(h.f)) {
-						i++;
-						fread(k, 1, i, h.f);
-						fflush(h.f);
-						for (int l = 0; l < i; l++)
-							printf("%c", k[l]);
-						k = (char*)realloc(k, i);
-
-					}
-					free(k);
-					fclose(h.f);
-				}
-				else {
-					printf("error: file not found\n");
-				}
-				printf("Done.");
 			}
 			else {
 				printf("That just ain't right! iWant or uTake [file]");

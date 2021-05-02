@@ -4,12 +4,13 @@ string TCPORT = "27015";
 
 struct filehandler {
 	//UNLIMITED POWWWWWWAR (well at least to 16^16, not taking into account 2s c)
-	long long recvbuflen = DEFAULT_BUFLEN;
-	long long sendbuflen = DEFAULT_BUFLEN;
-	long long fbuflen = DEFAULT_BUFLEN;
-	char* sendbuf = (char*)calloc(sendbuflen, 1);
-	char* fbuf = (char*)calloc(fbuflen, 1);
-	char* recvbuf = (char*)calloc(recvbuflen, 1);
+	long long tempbuflen = DEFAULT_BUFLEN;
+	//long long sendbuflen = DEFAULT_BUFLEN;
+	long long buflen = DEFAULT_BUFLEN;
+	long long _lastbuflen = buflen;
+	//char* sendbuf = (char*)calloc(sendbuflen, 1);
+	char* buf = (char*)calloc(buflen, 1);
+	char* tempbuf = NULL;
 	long index = 1; //biiiiiiiiiiiiig files
 	int iSendResult = 0;
 	int status = 0;
@@ -19,6 +20,8 @@ struct filehandler {
 	bool finishNextLoop = false, canEnd;
 	bool keepLooping = true;
 	FILE* f = NULL;
+	long long fRemaining = -1;
+	long long lastReadCount = 0;
 	string path = "";
 };
 
@@ -67,12 +70,12 @@ void cleanupFileHandler(struct filehandler* h) {
 	if (h != NULL) {
 		if (h->f) fclose(h->f);
 		if (h->keepLooping) {
-			if (h->recvbuf) free(h->recvbuf);
-			if (h->fbuf) free(h->fbuf);
-			if (h->sendbuf) free(h->sendbuf);
-			h->recvbuf = NULL;
-			h->fbuf = NULL;
-			h->sendbuf = NULL;
+			if (h->tempbuf) free(h->tempbuf);
+			if (h->buf) free(h->buf);
+			//if (h->sendbuf) free(h->sendbuf);
+			h->tempbuf = NULL;
+			h->buf = NULL;
+			//h->sendbuf = NULL;
 		}
 		h->keepLooping = false;
 	}
@@ -84,22 +87,23 @@ void resetFileHandler(struct filehandler* h) {
 	if (h->f) fclose(h->f);
 	h->index = 0;
 	h->status = 0;
+	h->lastReadCount = 0;
 	h->foundMax = false;
 	h->dataDropped = false;
 	h->finishNextLoop = false;
-	h->fbuflen = DEFAULT_BUFLEN;
-	h->recvbuflen = DEFAULT_BUFLEN;
-	h->sendbuflen = DEFAULT_BUFLEN;
-	if (h->recvbuf) h->recvbuf = (char*)realloc(h->recvbuf, h->recvbuflen);
-	else h->recvbuf = (char*)calloc(h->recvbuflen, 1);
-	if (h->fbuf) h->fbuf = (char*)realloc(h->fbuf, h->fbuflen);
-	else h->fbuf = (char*)calloc(h->fbuflen, 1);
-	if (h->sendbuf) h->sendbuf = (char*)realloc(h->sendbuf, h->sendbuflen);
-	else h->sendbuf = (char*)calloc(h->sendbuflen, 1);
-	if (!h->recvbuf || !h->fbuf || !h->sendbuf) {
-		printf("Unable to allocate memory for one or more buffers. aborting...");
+	h->buflen = DEFAULT_BUFLEN;
+	h->tempbuflen = DEFAULT_BUFLEN;
+	//h->sendbuflen = DEFAULT_BUFLEN;
+	if (h->buf) h->buf = (char*)realloc(h->buf, h->buflen);
+	else h->buf = (char*)calloc(h->buflen, 1);
+	//if (h->sendbuf) h->sendbuf = (char*)realloc(h->sendbuf, h->sendbuflen);
+	//else h->sendbuf = (char*)calloc(h->sendbuflen, 1);
+	if (!h->buf) {
+		printf("Unable to allocate memory for buffer. aborting...");
 		cleanupFileHandler(h);
 	}
+	//if (h->tempbuf) free(h->tempbuf);
+	//h->tempbuf = NULL;
 }
 
 void initValues(struct filehandler* h, int sendrecvInit) {
@@ -116,58 +120,30 @@ long long testSize(int one, int two) {
 //Attempts to reallocate both the file buffer, and optionally either send or recv buffer, for more or less memory space
 //bufExtSel: 0- no additional buffer; 1- resize sendbuf; 2- resize recvbuf;
 //returns true if successful
-bool requestNewSize(struct filehandler* h, long long proposedFbufSize, long long proposedBufOther, int bufOtherSel = 0, bool abortOnFail = false, SOCKET *sockptr = NULL) {
-	char* test = NULL;
-	long long* bufreflen = NULL;
-	char** bufref = NULL;
-	
-	if (bufOtherSel == 1) {
-		bufreflen = &h->sendbuflen;
-		bufref = &h->sendbuf;
-	}
-	else if (bufOtherSel == 2) {
-		bufreflen = &h->recvbuflen;
-		bufref = &h->recvbuf;
-	}
-	h->fbuflen = proposedFbufSize;
-	do {
+bool requestNewSize(struct filehandler* h, long long proposedBuf, bool abortOnFail = false, SOCKET* sockptr = NULL) {
+	if (h->_lastbuflen != proposedBuf) {
+		char* test = NULL;
+		long long* bufreflen = NULL;
+		char** bufref = NULL;
+		h->buflen = proposedBuf;
 		do {
-			test = (char*)realloc(h->fbuf, h->fbuflen);
+			test = (char*)realloc(h->buf, h->buflen);
 			if (!test) {
 				h->foundMax = true;
-				long long n = h->fbuflen / 2;
-				long long diff = h->fbuflen - n;
-				h->fbuflen = n;
-				proposedBufOther -= diff;
-				if (h->fbuflen <= 1) {
+				long long n = h->buflen / 2;
+				long long diff = h->buflen - n;
+				h->buflen = n;
+				if (h->buflen <= 1) {
 					printf("Allocated space for file buffer too small, unable to allocate.\n");
 					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
 					if (abortOnFail) cleanupFileHandler(h);
 					return false;
 				}
 			}
-			else h->fbuf = test;
+			else h->buf = test;
 		} while (!test);
-		
-		if (bufOtherSel == 1 || bufOtherSel == 2) {
-			test = NULL;
-			*bufreflen = proposedBufOther;
-			test = (char*)realloc(*bufref, *bufreflen);
-			if (!test) {
-				long long n = h->fbuflen / 2;
-				long long diff = h->fbuflen - n;
-				h->fbuflen = n;
-				proposedBufOther -= diff;
-				if (h->fbuflen <= 1 || *bufreflen <= 1) {
-					printf("Allocated space for file or send/recv buffer too small, unable to allocate.\n");
-					if (!sockptr) h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0); //no file
-					if (abortOnFail) cleanupFileHandler(h);
-					return false;
-				}
-			}
-			else *bufref = test;
-		}
-	} while (!test);
+		h->_lastbuflen = h->buflen;
+	}
 	return true;
 }
 
@@ -181,31 +157,30 @@ void initFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipient,
 	}
 	else {
 		rewind(h->f);
-		int n = fread(h->fbuf, 1, h->fbuflen, h->f);
+		fseek(h->f, 0L, SEEK_END);
+		h->fRemaining = ftell(h->f);
+		rewind(h->f);
+		long long l = 1 + getIndexSize(h->index);
+		h->buflen = DEFAULT_BUFLEN + l;
+		bool end = false;
+		if (h->buflen - l >= h->fRemaining) {
+			h->buflen = h->fRemaining + l;
+			end = true;
+			requestNewSize(h, h->buflen, false, sockptr);
+		}
+		sprintf(h->buf, "%ld ", h->index);
+		h->canEnd = true;
+		long long n = fread(h->buf + l, 1, h->buflen - l, h->f);
 		int tmp = fflush(h->f);
 		if (tmp != 0) printf("fflush: %d", tmp);
-		bool end = false;
-		if (n < h->fbuflen) {
-			h->fbuflen = n;
-			end = true;
-		}
-		if (h->fbuflen != 0) {
-
-			h->sendbuflen = h->fbuflen + 1 + getIndexSize(h->index);
-			h->sendbuf = (char*)realloc(h->sendbuf, h->sendbuflen);
-			if (!h->sendbuf) {
-				printf("Unable to allocate sending buffer memory, aborting.");
-				
-				cleanupFileHandler(h);
-			}
-			else {
-				sprintf(h->sendbuf, "%ld ", h->index);
-				for (long long j = 0; j < h->fbuflen; j++) {
-					*(h->sendbuf + j + 1 + getIndexSize(h->index)) = *(h->fbuf + j);
-				}
-				h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
-				printf("Initial bytes TCP sent: %d; index: %ld; %s: %s\n", h->sendbuflen, h->index, recipient, addr);
-				h->index++;
+		h->lastReadCount = n;
+		h->fRemaining -= n;
+		if (n != 0) {
+			h->iSendResult = send(*sockptr, h->buf, h->buflen, 0);
+			printf("Initial bytes TCP sent: %d; index: %ld; %s: %s\n", h->buflen, h->index, recipient, addr);
+			h->index++;
+			if (h->canEnd && end) {
+				h->finishNextLoop = true;
 			}
 		}
 		else {
@@ -225,43 +200,51 @@ void initFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipient
 		resetFileHandler(h);
 	}
 	else {
-		h->recvbuflen = h->fbuflen + 1 + getIndexSize(h->index);
-		h->recvbuf = (char*)realloc(h->recvbuf, h->recvbuflen); //account for ulong, a space, fbuf
-		if (!h->recvbuf) {
+		h->buflen = DEFAULT_BUFLEN + 1 + getIndexSize(h->index);
+		h->buf = (char*)realloc(h->buf, h->buflen); //account for ulong, a space, fbuf
+		if (!h->buf) {
 			printf("Unable to allocate receiving buffer memory, aborting.");
 			cleanupFileHandler(h);
 		}
 		else {
-			h->iSendResult = send(*sockptr, "ready ", strlen("ready ") + 1, 0);
-			printf("Starting file retrieval with %s %s\n", recipient, addr);
+			h->tempbuflen = DEFAULT_BUFLEN;
+			if (h->tempbuf) h->tempbuf = (char*)realloc(h->tempbuf, h->tempbuflen);
+			else h->tempbuf = (char*)calloc(h->tempbuflen, 1);
+			if (!h->tempbuf) {
+				printf("Unable to allocate receiving buffer memory, aborting.");
+				cleanupFileHandler(h);
+			}
+			else {
+				h->iSendResult = send(*sockptr, "ready ", strlen("ready ") + 1, 0);
+				printf("Starting file retrieval with %s %s\n", recipient, addr);
+			}
 		}
 	}
 }
 
 void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipient, const char* addr) {
-	long s = strtol(h->recvbuf, NULL, 10);
+	long s = strtol(h->buf, NULL, 10);
 	char* cmd;
-	getCmd(&cmd, h->recvbuf);
+	getCmd(&cmd, h->buf);
+	long long g = 1 + getIndexSize(h->index);
 	if (strcmp(cmd, "ready") == 0) { //ready 2 send data!!!1!1 client only
-		//fbuf already initialized from initValues
-
-		long long m = fread(h->fbuf, 1, h->fbuflen, h->f);
+		requestNewSize(h, DEFAULT_BUFLEN + g, false, sockptr);
+		sprintf(h->buf, "%ld ", h->index);
+		bool end = false;
+		if (h->buflen - g >= h->fRemaining) {
+			h->buflen = h->fRemaining + g;
+			end = true;
+			requestNewSize(h, h->buflen, false, sockptr);
+		}
+		long long m = fread(h->buf + g, 1, h->buflen - g, h->f);
 		int tmp = fflush(h->f);
 		if (tmp != 0) printf("fflush: %d", tmp);
-		bool end = false;
 		h->canEnd = true;
-		if (m < h->fbuflen) {
-			h->fbuflen = m;
-			end = true;
-		}
-		h->sendbuflen = h->fbuflen + 1 + getIndexSize(h->index);
-		if (h->fbuflen != 0) {
-			sprintf(h->sendbuf, "%ld ", h->index);
-			for (long long j = 0; j < h->fbuflen; j++) {
-				*(h->sendbuf + j + 1 + getIndexSize(h->index)) = *(h->fbuf + j);
-			}
-			h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
-			printf("Initial bytes TCP sent: %d; index: %ld;\n", h->sendbuflen, h->index);
+		h->lastReadCount = m;
+		h->fRemaining -= m;
+		if (m != 0) {
+			h->iSendResult = send(*sockptr, h->buf, h->buflen, 0);
+			printf("Initial bytes TCP sent: %d; index: %ld;\n", h->buflen, h->index);
 			h->index++;
 			if (h->canEnd && end) {
 				h->finishNextLoop = true;
@@ -282,11 +265,12 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 		}
 		else {
 			h->canEnd = true;
-			printf("%s replied with size %ld.\n", recipient, s);
-			if (s < h->fbuflen) { //data lost- reduce buffer size
+			printf("%s replied with size %ld, expected %ld.\n", recipient, s, h->lastReadCount);
+			if (s < h->lastReadCount) { //data lost- reduce buffer size
 				h->index--;
-				fseek(h->f, -1 * h->fbuflen, SEEK_CUR);
-				h->fbuflen /= 2;
+				fseek(h->f, -1 * (h->lastReadCount), SEEK_CUR);
+				h->fRemaining += h->lastReadCount;
+				h->buflen = ((h->buflen - g) / 2) + g;
 				h->dataDropped = true;
 				h->canEnd = false;
 
@@ -295,31 +279,30 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 				h->foundMax = true;
 			}
 			else if (!h->foundMax) { //no data lost yet, attempt to increase buffer size
-				h->fbuflen *= 2;
+				h->buflen = ((h->buflen - g) * 2) + g;
 			}
-			if (h->fbuflen == 0) { //too much data has been lost, terminate transfer
+			if (h->buflen - g <= 1) { //too much data has been lost, terminate transfer
 				printf("Too much data lost, terminating. Any data Downloaded file will remain.");
 				h->iSendResult = send(*sockptr, "-4", strlen("-4") + 1, 0);
 				resetFileHandler(h);
 			}
 			else if (!h->finishNextLoop) {
-				if (requestNewSize(h, h->fbuflen, h->fbuflen + 1 + getIndexSize(h->index), 1, false, sockptr)) {
-					long long n = fread(h->fbuf, 1, h->fbuflen, h->f);
+				bool end = false;
+				if (h->buflen - g >= h->fRemaining) {
+					h->buflen = h->fRemaining + g;
+					end = true;
+				}
+				if (requestNewSize(h, h->buflen, false, sockptr)) {
+					sprintf(h->buf, "%ld ", h->index);
+
+					long long n = fread(h->buf + g, 1, h->buflen - g, h->f);
 					int tmp = fflush(h->f);
 					if (tmp != 0) printf("fflush: %d", tmp);
-					bool end = false;
-					if (n < h->fbuflen) {
-						h->fbuflen = n;
-						h->sendbuflen = h->fbuflen + 1 + getIndexSize(h->index);
-						end = true;
-					}
-					if (h->fbuflen != 0) {
-						sprintf(h->sendbuf, "%ld ", h->index);
-						for (long long j = 0; j < h->fbuflen; j++) {
-							*(h->sendbuf + j + 1 + getIndexSize(h->index)) = *(h->fbuf + j);
-						}
-						h->iSendResult = send(*sockptr, h->sendbuf, h->sendbuflen, 0);
-						printf("Bytes TCP sent: %d; index: %ld; %s: %s\n", h->sendbuflen, h->index, recipient, addr);
+					h->lastReadCount = n;
+					h->fRemaining -= n;
+					if (n != 0) {
+						h->iSendResult = send(*sockptr, h->buf, h->buflen, 0);
+						printf("Bytes TCP sent: %d; index: %ld; %s: %s\n", h->buflen, h->index, recipient, addr);
 						h->index++;
 					}
 					else {
@@ -331,7 +314,7 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 						h->finishNextLoop = true;
 					}
 				}
-				
+
 			}
 			else {
 				printf("Done writing to %s %s.\n", recipient, addr);
@@ -344,14 +327,16 @@ void handleFileRead(struct filehandler* h, SOCKET* sockptr, const char* recipien
 }
 
 void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipient, const char* addr, long iResult_) {
-	long s = strtol(h->recvbuf, NULL, 10);
+	long s = strtol(h->buf, NULL, 10);
 	char* cmd;
-	getCmd(&cmd, h->recvbuf);
+	getCmd(&cmd, h->buf);
 	if (strcmp(cmd, "Done") == 0) { //All doen!!!!1!11!1
 		printf("Done receiving from %s %s.\n", recipient, addr);
-		fwrite(h->fbuf, 1, h->fbuflen, h->f);
+		fwrite(h->tempbuf, 1, h->tempbuflen, h->f);
 		int tmp = fflush(h->f);
 		if (tmp != 0) printf("fflush: %d", tmp);
+		free(h->tempbuf);
+		h->tempbuf = NULL;
 		resetFileHandler(h);
 	}
 	else {
@@ -366,12 +351,14 @@ void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipie
 		}
 		else {
 			printf("Received index from %s %s: %ld; size: %d;\n", recipient, addr, ind, iResult_);
-			long long l = iResult_ - (strlen(cmd) + 1);
-			long long m = h->recvbuflen;
+			long long g = strlen(cmd) + 1;
+			long long l = iResult_ - g;
 			bool updateBufs = false;
+			bool alreadyReducedIndex = false;
 			if (ind == h->index) { //next set of data
 				if (ind > 1) {
-					fwrite(h->fbuf, 1, h->fbuflen, h->f);
+					fwrite(h->tempbuf, 1, h->tempbuflen, h->f);
+
 					int tmp = fflush(h->f);
 					if (tmp != 0) printf("fflush: %d", tmp);
 				}
@@ -380,22 +367,37 @@ void handleFileWrite(struct filehandler* h, SOCKET* sockptr, const char* recipie
 				}
 				else if (!h->foundMax) {
 					updateBufs = true;
-					m = (l * 2) + 1 + getIndexSize(h->index+1);
+					h->buflen = (l * 2) + 1 + getIndexSize(h->index + 1);
 				}
 			}
 			else { //data loss, or something else mysterious
 				h->dataDropped = true;
 				updateBufs = true;
 				h->index--;
-				m = iResult_;
+				alreadyReducedIndex = true;
+				h->buflen = iResult_;
 			}
-			if (requestNewSize(h, l, m, 2, false, sockptr)) {
-				for (long long j = 0; j < h->fbuflen; j++) {
-					*(h->fbuf + j) = *(h->recvbuf + j + (strlen(cmd) + 1));
+			if (requestNewSize(h, h->buflen, false, sockptr)) {
+				char tmp[DEFAULT_BUFLEN];
+				sprintf(tmp, "%ld", l); //send back the length of the data retrieved to be written to the file
+				if (l != h->tempbuflen) {
+					long long prevtempbuflen = h->tempbuflen;
+					h->tempbuflen = l;
+					bool good = true;
+					char* test = (char*)realloc(h->tempbuf, h->tempbuflen);
+					if (!test) {
+						h->foundMax = true;
+						h->tempbuflen = prevtempbuflen;
+						if (l > h->tempbuflen) {
+							if(!alreadyReducedIndex) h->index--;
+							h->dataDropped = true;
+						}
+					}
+					else h->tempbuf = test;
 				}
-				sprintf(h->sendbuf, "%ld", h->fbuflen); //send back the length of the data retrieved to be written to the file
-				h->iSendResult = send(*sockptr, h->sendbuf, strlen(h->sendbuf) + 1, 0);
-				printf("Size sent: %s; %s: %s\n", h->sendbuf, recipient, addr);
+				memcpy(h->tempbuf, h->buf + (g), l);
+				h->iSendResult = send(*sockptr, tmp, strlen(tmp) + 1, 0);
+				printf("Size sent: %s; %s: %s\n", tmp, recipient, addr);
 				h->index++;
 			}
 		}

@@ -56,17 +56,17 @@ unsigned __stdcall ClientSession(void* data) {
 		//if size is negative, error occurred
 
 		//Technically this protocol is not necessary for TCP, and will work well for UDP, but this is how I implement it
-		int iResult_ = recv(ClientSocket, h.recvbuf, h.recvbuflen, 0);
+		int iResult_ = recv(ClientSocket, h.buf, h.buflen, 0);
 		if (iResult_ > 0) {
 			string cmdstr;
 			char* cmd;
-			getCmd(&cmd, h.recvbuf);
-			cmdstr = string(h.recvbuf);
+			getCmd(&cmd, h.buf);
+			cmdstr = string(h.buf);
 			
 			switch (h.status) {
 			case 0: //command- "iWant/uTake [filepath/filename]" as a string
 				
-				h.recvbuf[iResult_] = '\0';
+				h.buf[iResult_] = '\0';
 				if(iResult_ > strlen(cmd)+1){
 					h.path = cmdstr.substr(strlen(cmd) + 1, iResult_ - (strlen(cmd) + 1));
 					if (strcmp(cmd, "iWant") == 0) {
