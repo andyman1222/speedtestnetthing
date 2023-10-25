@@ -47,18 +47,43 @@ int recvbuflen;
 ofstream myfile("TCP.csv", ios::out | ios::app);
 bool connectionActive = false;
 
+struct stats {
+	int totalSentMessages;
+	int failedSentMessages;
+	int totalReceivedMessages;
+	int failedReceivedMessages;
+	int totalAttemptedConnections;
+	int totalFailedConnections;
+	int maxTime;
+	int minTime;
+	int totalBytesSent;
+	int failedBytesSent; //increased every error on send
+	int failedBytesLost; //increased every error on recv
+	int firstSizeWithError; //will also be first
+	int largestSizeWithError;
+};
+
+stats testStats;
+
 bool test(char* sendbuf) {
 	printf("Sending via TCP \"%s\"...\n", sendbuf);
 	int sum = 0;
+	int sentSize = 0;
 	startTCP = chrono::high_resolution_clock::now();
 	do {
 		iResult = send(TCP, *(&sendbuf + sum), (strlen(sendbuf) + 1) - sum, 0);
+		testStats.totalSentMessages++;
 		if (iResult == SOCKET_ERROR) {
+			testStats.failedSentMessages++;
+			testStats.failedBytesSent += (strlen(sendbuf) + 1) - sum;
 			printf("send failed with error: %d\n", WSAGetLastError());
 			free(recvbuf);
 			return false;
 		}
 		sum += iResult;
+		testStats.totalBytesSent += iResult;
+		testStats.totalSentMessages++;
+		sentSize = iResult;
 		printf("Bytes Sent TCP: %ld\n", iResult);
 	} while (sum < strlen(sendbuf) + 1);
 	printf("Listening TCP...\n");
@@ -70,9 +95,12 @@ bool test(char* sendbuf) {
 		if (iResult > 0) {
 			printf("Bytes received TCP: %d\n", iResult);
 			sum += iResult;
+			testStats.failedBytesLost += sentSize - iResult;
+			testStats.totalReceivedMessages++;
 		}
 		else if (iResult == 0) {
 			printf("Connection TCP closing...\n");
+			testStats.totalFailedConnections++;
 			free(recvbuf);
 			return false;
 		}
@@ -81,12 +109,15 @@ bool test(char* sendbuf) {
 			printf("recv TCP failed with error: %d\n", WSAGetLastError());
 			free(recvbuf);
 			return false;
+			
 		}
+		
 	} while (sum < strlen(sendbuf) + 1);
 	endTCP = chrono::high_resolution_clock::now();
 	long r = (endTCP - startTCP).count();
 	myfile << "" << iResult << "," << r << "," << sendbuf << "," << recvbuf << "\n";
 	printf("Received \"%s\". Time: %d\n", recvbuf, r);
+	testStats.totalReceivedMessages++;
 	free(recvbuf);
 	return true;
 }
@@ -143,7 +174,7 @@ int __cdecl main(int argc, char** argv)
 	// Attempt to connect to an address until one succeeds
 
 	printf("Attempting to connect %s:%s\n", ADDR.c_str(), TCPORT.c_str());
-
+	
 	for (ptr = resultTCP; ptr != NULL; ptr = ptr->ai_next) {
 
 		// Create a SOCKET for connecting to server
@@ -155,8 +186,10 @@ int __cdecl main(int argc, char** argv)
 		}
 
 		// Connect to server.
+		testStats.totalAttemptedConnections++;
 		iResult = connect(TCP, ptr->ai_addr, (int)ptr->ai_addrlen);
 		if (iResult == SOCKET_ERROR) {
+			testStats.totalFailedConnections++;
 			closesocket(TCP);
 			TCP = INVALID_SOCKET;
 			continue;
@@ -166,6 +199,7 @@ int __cdecl main(int argc, char** argv)
 
 	if (TCP == INVALID_SOCKET) {
 		printf("Unable to connect to server! TCP\n");
+		testStats.totalFailedConnections++;
 		cleanup(1);
 	}
 
@@ -189,6 +223,7 @@ int __cdecl main(int argc, char** argv)
 			connectionActive = test(s);
 			if (!connectionActive) {
 				printf("Test failed on 2^%d, test %d.\n", ii, r);
+				testStats.failedReceivedMessages++;
 				break;
 				break;
 				break;
