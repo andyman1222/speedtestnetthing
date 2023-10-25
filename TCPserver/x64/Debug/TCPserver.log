@@ -1,0 +1,3 @@
+﻿  TCPserver.cpp
+C:\Users\andy\Github\speedtestnetthing\TCPserver\TCPserver.cpp(228): warning C4715: 'cleanup': not all control paths return a value
+  TCPserver.vcxproj -> C:\Users\andy\Github\speedtestnetthing\x64\Debug\TCPserver.exe

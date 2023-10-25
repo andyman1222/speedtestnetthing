@@ -34,7 +34,7 @@ void _cleanup(int r) {
 }
 
 string TCPORT = "27015";
-string ADDR = "a.quantonium.net";
+string ADDR = "127.0.0.1";
 
 WSADATA wsaData;
 SOCKET TCP = INVALID_SOCKET;

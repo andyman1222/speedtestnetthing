@@ -1,0 +1,13 @@
+﻿  UDPclient.cpp
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(54,9): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 2 has type 'size_t'
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(54,9): message : consider using '%zd' in the format string
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(59,72): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(69,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(94,9): warning C4244: 'initializing': conversion from '_Rep' to 'long', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(190,30): warning C4244: 'argument': conversion from 'double' to 'size_t', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\UDPclient\UDPclient.cpp(245): warning C4715: 'cleanup': not all control paths return a value
+  UDPclient.vcxproj -> C:\Users\andy\Github\speedtestnetthing\x64\Debug\UDPclient.exe

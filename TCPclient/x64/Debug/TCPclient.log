@@ -1,0 +1,12 @@
+﻿  TCPclient.cpp
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(74,72): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(78,55): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(90,36): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(117,9): warning C4244: 'initializing': conversion from '_Rep' to 'long', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(217,30): warning C4244: 'argument': conversion from 'double' to 'size_t', possible loss of data
+C:\Users\andy\Github\speedtestnetthing\TCPclient\TCPclient.cpp(272): warning C4715: 'cleanup': not all control paths return a value
+  TCPclient.vcxproj -> C:\Users\andy\Github\speedtestnetthing\x64\Debug\TCPclient.exe
